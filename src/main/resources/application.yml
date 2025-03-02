@@ -1,0 +1,16 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  profiles:
+    active: @spring.profiles.active@
+  application:
+    name: ssh-key-signer
+
+logging:
+  level:
+    org: error
+
+vaadin:
+  exclude-urls: /rest/**
+  allowed-packages: io.binarycodes.homelab.sshkeysigner, com.vaadin

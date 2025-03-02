@@ -1,0 +1,27 @@
+vaadin:
+  launch-browser: true
+
+logging:
+  level:
+    org:
+      atmosphere: warn
+
+spring:
+  datasource:
+    driverClassName: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/app_db
+    username: app_user
+    password: app_user_pw
+  security:
+    oauth2:
+      client:
+        registration:
+          devtest:
+            provider: devtest
+            client-id: devtest
+            client-secret: WgUL31TbNhwK7WFMuAYnFp25OBww5nsA
+            authorization-grant-type: authorization_code
+            scope: openid,profile,email
+        provider:
+          devtest:
+            issuer-uri: https://keycloak.homedns.pro/realms/homelab

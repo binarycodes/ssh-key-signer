@@ -1,0 +1,20 @@
+[
+  {
+    "route": "",
+    "flowLayout": false,
+    "params": {},
+    "title": "Main Layout",
+    "children": [
+      {
+        "route": "",
+        "menu": {
+          "title": "Main page"
+        },
+        "loginRequired": true,
+        "flowLayout": false,
+        "params": {},
+        "title": "Main"
+      }
+    ]
+  }
+]
