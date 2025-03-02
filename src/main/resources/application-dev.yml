@@ -6,6 +6,12 @@ logging:
     org:
       atmosphere: warn
 
+
+keycloak:
+  client: devtest
+  url: https://keycloak.homedns.pro
+  realm: homelab
+
 spring:
   datasource:
     driverClassName: org.postgresql.Driver
@@ -14,14 +20,17 @@ spring:
     password: app_user_pw
   security:
     oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${keycloak.url}/realms/${keycloak.realm}
       client:
         registration:
           devtest:
-            provider: devtest
-            client-id: devtest
+            provider: ${keycloak.client}
+            client-id: ${keycloak.client}
             client-secret: WgUL31TbNhwK7WFMuAYnFp25OBww5nsA
             authorization-grant-type: authorization_code
             scope: openid,profile,email
         provider:
           devtest:
-            issuer-uri: https://keycloak.homedns.pro/realms/homelab
+            issuer-uri: ${keycloak.url}/realms/${keycloak.realm}
