@@ -6,6 +6,27 @@ spring:
     active: @spring.profiles.active@
   application:
     name: ssh-key-signer
+  datasource:
+    driverClassName: org.postgresql.Driver
+    url: jdbc:postgresql://${db.host}:${db.port}/${db.db_name}
+    username: ${db.username}
+    password: ${db.password}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${keycloak.url}/realms/${keycloak.realm}
+      client:
+        registration:
+          app:
+            provider: app
+            client-id: ${keycloak.client}
+            client-secret: ${keycloak.client_secret}
+            authorization-grant-type: authorization_code
+            scope: openid,profile,email
+        provider:
+          app:
+            issuer-uri: ${keycloak.url}/realms/${keycloak.realm}
 
 logging:
   level:
