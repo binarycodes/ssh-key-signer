@@ -5,10 +5,11 @@ logging:
   level:
     org:
       atmosphere: warn
+      springframework: warn
 
 keycloak:
   client: my-test-client
-  client_secret: pK9P9s0cqoSeW9p5Jv8zR97jtDmiOJDi
+  client_secret: NOVQKaevwzliFfqwzTRnHZmrEssd1s9f
   url: http://localhost:8090
   realm: my-test-realm
 

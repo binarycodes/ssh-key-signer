@@ -26,5 +26,10 @@ target/
 ### bruno
 /bruno/
 
+### others
+*.pub
+*.log
+
 ### generated files
 *.generated.*
+src/main/frontend/generated/
