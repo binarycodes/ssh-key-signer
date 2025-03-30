@@ -31,12 +31,11 @@ export default function MainView() {
 
   return (
     <>
-
       <Card theme="elevated">
         <div slot="title">Upload user key</div>
         <div slot="subtitle">Only upload the public key</div>
         <Upload
-                target="/rest/key/userSign"
+                target="/rest/key/upload"
                 accept=".pub"
                 maxFiles={1}
                 maxFileSize={maxFileSizeInBytes}

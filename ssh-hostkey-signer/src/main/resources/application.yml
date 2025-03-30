@@ -1,0 +1,10 @@
+spring:
+  profiles:
+    active: @spring.profiles.active@
+  main:
+    web-application-type: NONE
+
+logging:
+  level:
+    org: error
+

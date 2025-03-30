@@ -25,7 +25,7 @@ public class SecurityConfig extends VaadinWebSecurity {
         http.authorizeHttpRequests(registry -> {
             registry.requestMatchers(routeUtil::isRouteAllowed).permitAll();
         });
-        //http.oauth2ResourceServer(resourceServerConfigurer -> resourceServerConfigurer.jwt(Customizer.withDefaults()));
+        http.oauth2ResourceServer(resourceServerConfigurer -> resourceServerConfigurer.jwt(Customizer.withDefaults()));
         super.configure(http);
 
         http.oauth2Login(Customizer.withDefaults());

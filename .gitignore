@@ -1,36 +1,4 @@
-node_modules
-HELP.md
-target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
-
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
 .idea
-*.iws
-*.iml
-*.ipr
-
-### VS Code ###
-.vscode/
-
-### bruno
-/bruno/
-
-### others
-*.pub
-*.log
-
-### generated files
-*.generated.*
-src/main/frontend/generated/
-src/main/bundles/prod.bundle
+**/target/
+**/node_modules/
+**/*ca_key*

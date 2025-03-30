@@ -97,12 +97,12 @@ public class KeyService {
         return SshPrivateKeyFileFactory.parse(keyInfo.privateKey().getBytes(StandardCharsets.UTF_8)).toKeyPair(passphrase);
     }
 
-    public Optional<SignedPublicKeyDownload> signUserKey(String filename, byte[] bytes) {
-        return signKey(SIGN_TYPE.USER, filename, bytes, "binarycodes");
+    public Optional<SignedPublicKeyDownload> signUserKey(String filename, byte[] bytes, String principalName) {
+        return signKey(SIGN_TYPE.USER, filename, bytes, principalName);
     }
 
-    public Optional<SignedPublicKeyDownload> signHostKey(String filename, byte[] bytes) {
-        return signKey(SIGN_TYPE.HOST, filename, bytes, "hostname");
+    public Optional<SignedPublicKeyDownload> signHostKey(String filename, byte[] bytes, String hostName) {
+        return signKey(SIGN_TYPE.HOST, filename, bytes, hostName);
     }
 
     private Optional<SignedPublicKeyDownload> signKey(SIGN_TYPE signType, String filename, byte[] bytes, String typeData) {
@@ -118,9 +118,10 @@ public class KeyService {
             };
 
             var signedKey = SshPublicKeyFileFactory.create(signed.getCertificate(), publicKeyFileToSign.getComment(), SshPublicKeyFileFactory.OPENSSH_FORMAT);
+            var signedKeyString = new String(signedKey.getFormattedKey(), StandardCharsets.UTF_8);
             var downloadFilename = "%s-%s.%s".formatted(FilenameUtils.getBaseName(filename), CERTIFICATE_FILE_NAME_SUFFIX, FilenameUtils.getExtension(filename));
 
-            return Optional.of(new SignedPublicKeyDownload(downloadFilename, signedKey.getFormattedKey()));
+            return Optional.of(new SignedPublicKeyDownload(downloadFilename, signedKeyString));
         } catch (IOException e) {
             log.error(e.getMessage(), e);
         } catch (InvalidPassphraseException | SshException e) {
