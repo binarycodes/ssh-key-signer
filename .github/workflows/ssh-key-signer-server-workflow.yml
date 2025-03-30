@@ -8,7 +8,7 @@ on:
       - .github/workflows/ssh-key-signer-server-workflow.yml
 
 jobs:
-  run:
+  build:
     uses: ./.github/workflows/generic-workflow.yml
     with:
       service: ssh-key-signer-server
