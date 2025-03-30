@@ -24,6 +24,9 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: install xmllint
+        run: sudo apt install -y libxml2-utils
+
       - name: build with maven
         run: mvn clean package --projects ${{ env.PROJECT }} --also-make --batch-mode -Pproduction
 
