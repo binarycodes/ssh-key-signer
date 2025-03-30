@@ -1,6 +1,12 @@
 server:
   port: ${PORT:8080}
 
+
+app:
+  ca_user_path: "./user_ca_key"
+  ca_host_path: "./host_ca_key"
+
+
 spring:
   profiles:
     active: @spring.profiles.active@

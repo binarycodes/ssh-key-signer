@@ -33,22 +33,20 @@ export default function MainView() {
     <>
 
       <Card theme="elevated">
-        <div slot="title">Lapland</div>
-        <div slot="subtitle">The Exotic North</div>
-        <div>Lapland is the northern-most region of Finland and an active outdoor destination.</div>
+        <div slot="title">Upload user key</div>
+        <div slot="subtitle">Only upload the public key</div>
+        <Upload
+                target="/rest/key/userSign"
+                accept=".pub"
+                maxFiles={1}
+                maxFileSize={maxFileSizeInBytes}
+                onFileReject={(event) => {
+                  Notification.show(event.detail.error);
+                }}
+                headers={csrfHeaders}
+              />
+        <Button theme="primary">Submit</Button>
       </Card>
-      
-      <Upload
-        target="/rest/key/sign"
-        accept=".pub"
-        maxFiles={1}
-        maxFileSize={maxFileSizeInBytes}
-        onFileReject={(event) => {
-          Notification.show(event.detail.error);
-        }}
-        headers={csrfHeaders}
-      />
-      <Button theme="primary">Submit</Button>
     </>
   );
 }

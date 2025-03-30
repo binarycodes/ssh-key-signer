@@ -6,10 +6,12 @@ logging:
     org:
       atmosphere: warn
       springframework: warn
+    io:
+      binarycodes: trace
 
 keycloak:
   client: my-test-client
-  client_secret: NOVQKaevwzliFfqwzTRnHZmrEssd1s9f
+  client_secret: NGMFDNlSqjxVWgqwOyZQ4NS2fY18BG0x
   url: http://localhost:8090
   realm: my-test-realm
 
