@@ -1,0 +1,14 @@
+name: ssh-hostkey-signer
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - ssh-hostkey-signer/**
+      - .github/workflows/ssh-hostkey-signer-workflow.yml
+
+jobs:
+  run:
+    uses: ./.github/workflows/generic-workflow.yml
+    with:
+      service: ssh-hostkey-signer

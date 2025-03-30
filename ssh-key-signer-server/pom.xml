@@ -4,11 +4,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.binarycodes.homelab</groupId>
-    <artifactId>ssh-key-signer</artifactId>
+    <artifactId>ssh-key-signer-server</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>ssh-key-signer</name>
+    <name>Server - SSH Key Signer</name>
     <description>ssh key signer</description>
 
     <properties>

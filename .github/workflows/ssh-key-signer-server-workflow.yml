@@ -1,0 +1,14 @@
+name: ssh-key-signer-server
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - ssh-key-signer-server/**
+      - .github/workflows/ssh-key-signer-server-workflow.yml
+
+jobs:
+  run:
+    uses: ./.github/workflows/generic-workflow.yml
+    with:
+      service: ssh-key-signer-server

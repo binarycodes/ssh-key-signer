@@ -1,0 +1,14 @@
+name: ssh-signer-common-lib
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - ssh-signer-common-lib/**
+      - .github/workflows/ssh-signer-common-lib-workflow.yml
+
+jobs:
+  run:
+    uses: ./.github/workflows/generic-workflow.yml
+    with:
+      service: ssh-signer-common-lib

@@ -8,6 +8,8 @@
     <artifactId>ssh-userkey-signer</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
+    <name>Sign User Key - SSH Key Signer</name>
+
     <properties>
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
