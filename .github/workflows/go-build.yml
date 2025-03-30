@@ -9,10 +9,6 @@ on:
       artifact:
         required: true
         type: string
-
-defaults:
-  run:
-    working-directory: ./${{ inputs.service }}
         
 jobs:
   build:
@@ -23,8 +19,11 @@ jobs:
           - '1.19' #default for debian bookworm
           - '1.22'
           - '1.23'
-          - '1.24' #latest for arch
-          
+          - '1.24' #latest for arch 
+    defaults:
+      run:
+        working-directory: ./${{ inputs.service }}
+         
     steps:
       - name: checkout sources
         uses: actions/checkout@v4
