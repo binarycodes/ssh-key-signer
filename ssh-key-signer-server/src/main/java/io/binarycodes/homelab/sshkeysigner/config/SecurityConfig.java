@@ -23,10 +23,15 @@ public class SecurityConfig extends VaadinWebSecurity {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(registry -> {
-            registry.requestMatchers(routeUtil::isRouteAllowed).permitAll();
+            registry.requestMatchers(routeUtil::isRouteAllowed)
+                    .permitAll();
         });
         http.oauth2ResourceServer(resourceServerConfigurer -> resourceServerConfigurer.jwt(Customizer.withDefaults()));
         super.configure(http);
+
+        http.csrf(config -> {
+            config.ignoringRequestMatchers("/rest/key/**");
+        });
 
         http.oauth2Login(Customizer.withDefaults());
     }

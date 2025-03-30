@@ -1,0 +1,5 @@
+APP_SERVER_URL: http://localhost:8080
+APP_KEYCLOAK_URL: http://localhost:8090
+APP_REALM_NAME: my-test-realm
+APP_CLIENT_ID: my-test-client
+APP_CLIENT_SECRET: fu3hZgzTNHjUIGzZETKuHwQzNT9ptbFG

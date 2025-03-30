@@ -1,23 +1,13 @@
-vaadin:
-  launch-browser: true
+OAUTH_CLIENT: my-test-client
+OAUTH_CLIENT_SECRET: fu3hZgzTNHjUIGzZETKuHwQzNT9ptbFG
+OAUTH_URL: http://localhost:8090
+OAUTH_REALM: my-test-realm
 
-logging:
-  level:
-    org:
-      atmosphere: warn
-      springframework: warn
-    io:
-      binarycodes: trace
+DB_HOST: localhost
+DB_PORT: 5432
+DB_NAME: app_db
+DB_USERNAME: app_user
+DB_PASSWORD: app_user_pw
 
-keycloak:
-  client: my-test-client
-  client_secret: NGMFDNlSqjxVWgqwOyZQ4NS2fY18BG0x
-  url: http://localhost:8090
-  realm: my-test-realm
-
-db:
-  host: localhost
-  port: 5432
-  db_name: app_db
-  username: app_user
-  password: app_user_pw
+CA_USER_PATH: "user_ca_key"
+CA_HOST_PATH: "host_ca_key"

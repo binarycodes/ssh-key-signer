@@ -14,6 +14,7 @@
     <properties>
         <java.version>21</java.version>
         <vaadin.version>24.7.1</vaadin.version>
+        <ssh-signer-common-lib.version>0.0.1-SNAPSHOT</ssh-signer-common-lib.version>
     </properties>
 
     <parent>
@@ -98,6 +99,12 @@
             <artifactId>maverick-synergy-client</artifactId>
             <version>3.1.2</version>
         </dependency>
+        <dependency>
+            <groupId>io.binarycodes.homelab</groupId>
+            <artifactId>ssh-signer-common-lib</artifactId>
+            <version>${ssh-signer-common-lib.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>

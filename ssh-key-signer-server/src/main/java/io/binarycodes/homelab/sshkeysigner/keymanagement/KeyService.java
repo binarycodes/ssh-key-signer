@@ -4,6 +4,7 @@ import com.sshtools.common.publickey.*;
 import com.sshtools.common.ssh.SshException;
 import com.sshtools.common.ssh.components.SshCertificate;
 import com.sshtools.common.ssh.components.SshKeyPair;
+import io.binarycodes.homelab.lib.SignedPublicKeyDownload;
 import io.binarycodes.homelab.sshkeysigner.config.ApplicationProperties;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;

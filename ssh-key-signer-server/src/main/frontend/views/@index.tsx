@@ -35,7 +35,7 @@ export default function MainView() {
         <div slot="title">Upload user key</div>
         <div slot="subtitle">Only upload the public key</div>
         <Upload
-                target="/rest/key/upload"
+                target="/rest/upload/file"
                 accept=".pub"
                 maxFiles={1}
                 maxFileSize={maxFileSizeInBytes}

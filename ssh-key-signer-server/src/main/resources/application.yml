@@ -1,11 +1,9 @@
 server:
   port: ${PORT:8080}
 
-
 app:
-  ca_user_path: "./user_ca_key"
-  ca_host_path: "./host_ca_key"
-
+  ca_user_path: ${CA_USER_PATH}
+  ca_host_path: ${CA_HOST_PATH}
 
 spring:
   profiles:
@@ -14,25 +12,25 @@ spring:
     name: ssh-key-signer
   datasource:
     driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://${db.host}:${db.port}/${db.db_name}
-    username: ${db.username}
-    password: ${db.password}
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${keycloak.url}/realms/${keycloak.realm}
+          issuer-uri: ${OAUTH_URL}/realms/${OAUTH_REALM}
       client:
         registration:
           app:
             provider: app
-            client-id: ${keycloak.client}
-            client-secret: ${keycloak.client_secret}
+            client-id: ${OAUTH_CLIENT}
+            client-secret: ${OAUTH_CLIENT_SECRET}
             authorization-grant-type: authorization_code
             scope: openid,profile,email
         provider:
           app:
-            issuer-uri: ${keycloak.url}/realms/${keycloak.realm}
+            issuer-uri: ${OAUTH_URL}/realms/${OAUTH_REALM}
   servlet:
     multipart:
       enabled: true
@@ -42,7 +40,10 @@ spring:
 logging:
   level:
     org: error
+    io:
+      binarycodes: error
 
 vaadin:
-  exclude-urls: /rest/**
   allowed-packages: io.binarycodes.homelab.sshkeysigner, com.vaadin
+  exclude-urls: /rest/**
+  launch-browser: false
