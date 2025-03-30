@@ -1,11 +1,11 @@
 name: create and publish docker container
 
 on:
-  workflow_dispatch:
-  push:
-    tags: [ 'v*.*.*' ]
-    branches:
-      - main
+  workflow_call:
+    inputs:
+      service:
+        required: true
+        type: string
 
 env:
   REGISTRY: docker.io
@@ -25,13 +25,13 @@ jobs:
           cache: maven
 
       - name: build with maven
-        run: mvn -B package -Pproduction
+        run: mvn clean package --projects :${{ inputs.service }} --also-make --batch-mode -Pproduction
 
       - name: extract project version
         id: extract_version
         run: |
-          echo "MAVEN_NAME=$(mvn -q -Dexec.executable='echo' -Dexec.args='${project.name}' --non-recursive exec:exec)" >> $GITHUB_OUTPUT
-          echo "MAVEN_VERSION=$(mvn -q -Dexec.executable='echo' -Dexec.args='${project.version}' --non-recursive exec:exec)" >> $GITHUB_OUTPUT
+          echo "MAVEN_NAME=$(mvn -q --projects :${{ inputs.service }} -Dexec.executable='echo' -Dexec.args='${project.name}' --non-recursive exec:exec)" >> $GITHUB_OUTPUT
+          echo "MAVEN_VERSION=$(mvn -q --projects :${{ inputs.service }} -Dexec.executable='echo' -Dexec.args='${project.version}' --non-recursive exec:exec)" >> $GITHUB_OUTPUT
 
       - name: login to docker hub
         uses: docker/login-action@v3
@@ -54,7 +54,7 @@ jobs:
       - name: build and push
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ${{ inputs.service }}
           push: true
           platforms: linux/amd64
           tags: ${{ steps.meta.outputs.tags }}

@@ -21,4 +21,4 @@ jobs:
           distribution: 'temurin'
 
       - name: build application
-        run: mvn clean package --projects :${{ inputs.service }} --also-make --batch-mode
+        run: mvn clean package --projects :${{ inputs.service }} --also-make --batch-mode -Pproduction
