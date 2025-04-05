@@ -1,0 +1,87 @@
+name: test-cakeyserver
+
+networks:
+  keyserver:
+    driver: bridge
+
+volumes:
+  db_data:
+    
+services:
+  db:
+    image: postgres:17.4-alpine
+    ports:
+      - 5432:5432/tcp
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./init_db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      - POSTGRES_PASSWORD=root_pw
+      - POSTGRES_USER=root
+      - POSTGRES_DB=postgres_db
+    healthcheck:
+      test: "pg_isready -h localhost -d postgres_db"
+      interval: 5s
+      timeout: 2s
+      retries: 15
+    networks:
+      - keyserver
+  sso:
+    image: quay.io/keycloak/keycloak:26.1.4
+    ports:
+      - 8090:8090/tcp
+      - 9000:9000/tcp
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HOSTNAME_STRICT: false
+      KC_HTTP_ENABLED: true
+      KC_HTTP_PORT: 8090
+      KC_PROXY: edge
+      KC_DB: postgres
+      KC_DB_USERNAME: sso_user
+      KC_DB_PASSWORD: sso_user_pw
+      KC_DB_URL: jdbc:postgresql://db:5432/sso_db
+      KC_FEATURES: token-exchange,admin-fine-grained-authz
+    volumes:
+      - ./keycloak/HealthCheck.java:/tmp/HealthCheck.java:read-only
+    healthcheck:
+      test: "java /tmp/HealthCheck.java http://localhost:9000/health/ready"
+      interval: 5s
+      timeout: 2s
+      retries: 15
+    command: --verbose start-dev --health-enabled=true --import-realm
+    container_name: app_sso
+    networks:
+      - keyserver
+  sso-init:
+    image: node:latest
+    container_name: sso-init
+    depends_on:
+      sso:
+        condition: service_healthy
+    volumes:
+      - ./keycloak/init.js:/tmp/init.js
+    entrypoint: ["node", "/tmp/init.js"]
+    environment:
+      KC_ADMIN_USERNAME: admin
+      KC_ADMIN_PASSWORD: admin
+      KC_URL: http://sso:8090
+    networks:
+      - keyserver
+  ssh-keysigner-server:
+    depends_on:
+      db:
+        condition: service_healthy
+      sso-init:
+        condition: service_completed_successfully
+    image: binarycodes/ssh-key-signer:latest
+    ports:
+      - "8088:8080/tcp"
+    volumes:
+      - ./application-prod.yml:/app/application-prod.yml
+    networks:
+      - keyserver

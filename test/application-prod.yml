@@ -1,0 +1,13 @@
+OAUTH_CLIENT: my-test-client
+OAUTH_CLIENT_SECRET: UTRtYkyYN1nbgdPPbBru1FDVsE8ye5JE
+OAUTH_URL: http://10.88.0.100:8090
+OAUTH_REALM: my-test-realm
+
+DB_HOST: db
+DB_PORT: 5432
+DB_NAME: app_db
+DB_USERNAME: app_user
+DB_PASSWORD: app_user_pw
+
+CA_USER_PATH: "user_ca_key"
+CA_HOST_PATH: "host_ca_key"
