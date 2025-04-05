@@ -2,9 +2,22 @@ spring:
   profiles:
     active: @spring.profiles.active@
   main:
+    banner-mode: off
     web-application-type: NONE
 
 logging:
   level:
-    org: error
+    io:
+      binarycodes: error
+    org:
+      atmosphere: error
+      springframework: error
 
+app:
+  server-url: ${APP_SERVER_URL}
+  keycloak-url: ${APP_KEYCLOAK_URL}
+  realm-name: ${APP_REALM_NAME}
+  client-id: ${APP_CLIENT_ID}
+  client-secret: ${APP_CLIENT_SECRET}
+  grant-type: client_credentials
+  token-url:  /realms/${app.realm-name}/protocol/openid-connect/token

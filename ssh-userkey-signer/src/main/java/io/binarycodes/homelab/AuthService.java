@@ -29,12 +29,9 @@ public class AuthService {
         this.applicationProperties = applicationProperties;
     }
 
-
-    public String startDeviceFlowAuth() {
+    public Optional<String> startDeviceFlowAuth() {
         return initiateDeviceFlow().map(this::displayLoginInfo)
-                .map(this::waitForToken)
-                .map(token -> token.orElse(""))
-                .orElse("");
+                .flatMap(this::waitForToken);
     }
 
     private RestClient getRestClient() {
@@ -42,7 +39,6 @@ public class AuthService {
                 .baseUrl(applicationProperties.keycloakUrl())
                 .build();
     }
-
 
     private DeviceFlowStartResponse displayLoginInfo(DeviceFlowStartResponse deviceFlowStartResponse) {
         System.out.println(deviceFlowStartResponse.getVerificationUriComplete());
@@ -104,7 +100,6 @@ public class AuthService {
             return Optional.empty();
         }
 
-
         try {
             var accessTokenResponse = new ObjectMapper().readValue(response.getBody(), DeviceFlowToken.class);
             return Optional.ofNullable(accessTokenResponse.getAccessToken());
@@ -142,6 +137,4 @@ public class AuthService {
 
         return Optional.empty();
     }
-
-
 }

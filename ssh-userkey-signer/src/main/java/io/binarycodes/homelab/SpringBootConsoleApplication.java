@@ -6,6 +6,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
+import java.io.IOException;
+
 @Log4j2
 @SpringBootApplication
 @ConfigurationPropertiesScan
@@ -25,14 +27,13 @@ public class SpringBootConsoleApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        log.info("started the command line app");
-
-        var token = authService.startDeviceFlowAuth();
-        if (token == null) {
-            log.error("Error getting auth token.");
-            return;
-        }
-
-        signerService.signMyKey(token, args[0], args[1]);
+        var tokenResponse = authService.startDeviceFlowAuth();
+        tokenResponse.ifPresentOrElse(token -> {
+            try {
+                signerService.signMyKey(token, args[0], args[1]);
+            } catch (IOException e) {
+                log.error(e.getMessage(), e);
+            }
+        }, () -> log.error("Error getting auth token."));
     }
 }

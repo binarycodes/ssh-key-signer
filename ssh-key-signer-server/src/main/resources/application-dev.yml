@@ -1,5 +1,5 @@
 OAUTH_CLIENT: my-test-client
-OAUTH_CLIENT_SECRET: fu3hZgzTNHjUIGzZETKuHwQzNT9ptbFG
+OAUTH_CLIENT_SECRET: UTRtYkyYN1nbgdPPbBru1FDVsE8ye5JE
 OAUTH_URL: http://localhost:8090
 OAUTH_REALM: my-test-realm
 
