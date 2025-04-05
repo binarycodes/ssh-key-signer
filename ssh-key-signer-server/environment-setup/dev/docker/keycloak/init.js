@@ -5,6 +5,13 @@
     const realmName = "my-test-realm";
     const realmUrl = `${keycloakBaseUrl}/admin/realms/${realmName}`;
     const clientId = "my-test-client";
+
+    /*
+      remember to apply proper secret management for actual production uses
+      do not share the secret key in public
+    */
+    const clientSecret = 'UTRtYkyYN1nbgdPPbBru1FDVsE8ye5JE';
+
     const users = [{
         username: "user",
         firstName: "John",
@@ -93,11 +100,14 @@
         } else {
             const clientConfig = {
                 clientId: clientId,
+                secret: clientSecret,
                 enabled: true,
                 publicClient: false,
+                serviceAccountsEnabled: true,
                 redirectUris: ['*'],
                 attributes: {
-                    'post.logout.redirect.uris': '*'
+                    'post.logout.redirect.uris': '*',
+                    'oauth2.device.authorization.grant.enabled': true,
                 }
             };
 
