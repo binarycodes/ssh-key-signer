@@ -1,0 +1,14 @@
+name: go-ssh-signer
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - go-ssh-signer/**
+      - .github/workflows/go-ssh-signer-workflow.yml
+
+jobs:
+  run:
+    uses: .github/workflows/go-build.yml
+    with:
+      service: go-ssh-signer

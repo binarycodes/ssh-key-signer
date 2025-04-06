@@ -1,0 +1,34 @@
+name: generic-go-build
+
+on:
+  workflow_call:
+    inputs:
+      service:
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version:
+          - '1.19' #default for debian bookworm
+          - '1.22'
+          - '1.23'
+          - '1.24' #latest for arch
+          
+    steps:
+      - name: checkout sources
+        uses: actions/checkout@v4
+
+      - name: setup Go ${{ matrix.go-version }}
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: install dependencies
+        run: go get .
+
+      - name: build
+        run: go build -v ${{ inputs.service }}/...
