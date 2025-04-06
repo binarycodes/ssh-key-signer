@@ -6,6 +6,7 @@ on:
     paths:
       - go-ssh-signer/**
       - .github/workflows/go-ssh-signer-workflow.yml
+      - .github/workflows/go-build.yml
 
 jobs:
   run:

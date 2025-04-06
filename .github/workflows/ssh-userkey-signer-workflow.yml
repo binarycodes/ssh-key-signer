@@ -6,6 +6,7 @@ on:
     paths:
       - ssh-userkey-signer/**
       - .github/workflows/ssh-userkey-signer-workflow.yml
+      - .github/workflows/generic-workflow.yml
 
 jobs:
   run:

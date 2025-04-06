@@ -6,6 +6,7 @@ on:
     paths:
       - ssh-hostkey-signer/**
       - .github/workflows/ssh-hostkey-signer-workflow.yml
+      - .github/workflows/generic-workflow.yml
 
 jobs:
   run:
