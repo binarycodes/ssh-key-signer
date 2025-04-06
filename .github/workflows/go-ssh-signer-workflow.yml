@@ -9,6 +9,6 @@ on:
 
 jobs:
   run:
-    uses: .github/workflows/go-build.yml
+    uses: ./.github/workflows/go-build.yml
     with:
       service: go-ssh-signer
