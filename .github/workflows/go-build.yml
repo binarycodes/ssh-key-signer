@@ -27,8 +27,5 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
 
-      - name: install dependencies
-        run: go get .
-
       - name: build
         run: go build -v ${{ inputs.service }}/...
