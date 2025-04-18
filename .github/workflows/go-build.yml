@@ -10,6 +10,10 @@ on:
         required: true
         type: string
 
+defaults:
+  run:
+    working-directory: ./${{ inputs.service }}
+        
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -31,7 +35,7 @@ jobs:
           go-version: ${{ matrix.go-version }}
 
       - name: build
-        run: go build -v ${{ inputs.service }}/...
+        run: go build -v
 
       - name: upload build artifact
         uses: actions/upload-artifact@v4
