@@ -34,11 +34,11 @@ jobs:
           go-version: ${{ matrix.go-version }}
 
       - name: build
-        run: go build -v
+        run: make build
 
       - name: upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.artifact }}-${{ matrix.go-version }}
-          path: ${{ inputs.service}}/${{ inputs.artifact }}
+          path: ${{ inputs.service}}/bin/${{ inputs.artifact }}
           retention-days: 5
