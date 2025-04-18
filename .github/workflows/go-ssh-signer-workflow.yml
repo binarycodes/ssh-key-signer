@@ -13,3 +13,4 @@ jobs:
     uses: ./.github/workflows/go-build.yml
     with:
       service: go-ssh-signer
+      artifact: ssh-keysign

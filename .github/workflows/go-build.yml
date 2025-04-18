@@ -6,6 +6,9 @@ on:
       service:
         required: true
         type: string
+      artifact:
+        required: true
+        type: string
 
 jobs:
   build:
@@ -29,3 +32,10 @@ jobs:
 
       - name: build
         run: go build -v ${{ inputs.service }}/...
+
+      - name: upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact }}
+          path: ${{ inputs.artifact }}
+          retention-days: 5
