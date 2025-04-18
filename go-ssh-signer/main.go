@@ -13,20 +13,40 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/mitchellh/mapstructure"
+	"gopkg.in/yaml.v3"
+)
+
+const (
+	ClientCredentialGrant = "client_credentials"
 )
 
 var (
-	caServerUrl           = "http://localhost:8088"
-	HostSignUrl           = fmt.Sprintf("%v/rest/key/hostSign", caServerUrl)
-	UserSignUrl           = fmt.Sprintf("%v/rest/key/userSign", caServerUrl)
-	ClientId              = "my-test-client"
-	ClientSecret          = "UTRtYkyYN1nbgdPPbBru1FDVsE8ye5JE"
-	ClientCredentialGrant = "client_credentials"
-	TokenUrl              = "http://10.88.0.134:8090/realms/my-test-realm/protocol/openid-connect/token"
-
+	config       = loadConfig()
 	hostnameFlag = flag.String("hostname", "", "specify the hostname for the certificate")
 	keyFileFlag  = flag.String("keyfile", "", "path of the key file that is to be signed")
 )
+
+type CaRequestUrl interface {
+	hostSignUrl() string
+	userSignUrl() string
+}
+
+type Config struct {
+	CaServerUrl  string `mapstructure:"ca_server_url"`
+	ClientId     string `mapstructure:"client_id"`
+	ClientSecret string `mapstructure:"client_secret"`
+	TokenUrl     string `mapstructure:"token_url"`
+}
+
+func (config Config) hostSignUrl() string {
+	return fmt.Sprintf("%v/rest/key/hostSign", config.CaServerUrl)
+}
+
+func (config Config) userSignUrl() string {
+	return fmt.Sprintf("%v/rest/key/userSign", config.CaServerUrl)
+}
 
 type AccessToken struct {
 	AccessToken      string `json:"access_token"`
@@ -57,6 +77,28 @@ func main() {
 
 	token := accessToken()
 	requestToSign(token.AccessToken, *hostnameFlag, *keyFileFlag)
+}
+
+func loadConfig() Config {
+	file, err := os.ReadFile("config.yml")
+	if err != nil {
+		exitWithError(err)
+	}
+
+	var config Config
+	var raw interface{}
+
+	// unmarshal our input YAML file into empty interface
+	if err := yaml.Unmarshal(file, &raw); err != nil {
+		exitWithError(err)
+	}
+
+	decoder, _ := mapstructure.NewDecoder(&mapstructure.DecoderConfig{WeaklyTypedInput: true, Result: &config})
+	if err := decoder.Decode(raw); err != nil {
+		exitWithError(err)
+	}
+
+	return config
 }
 
 func readKeyFile(keyfile string) (string, error) {
@@ -98,7 +140,7 @@ func requestToSign(token string, hostname string, keyfile string) {
 		exitWithError(err)
 	}
 
-	req, err := http.NewRequest("POST", HostSignUrl, postBody)
+	req, err := http.NewRequest("POST", config.hostSignUrl(), postBody)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %v", token))
 
@@ -137,11 +179,11 @@ func saveSignedResponse(keyfile string, signedResponse SignedResponse) error {
 func accessToken() AccessToken {
 	// form data
 	data := url.Values{}
-	data.Set("client_id", ClientId)
-	data.Set("client_secret", ClientSecret)
+	data.Set("client_id", config.ClientId)
+	data.Set("client_secret", config.ClientSecret)
 	data.Set("grant_type", ClientCredentialGrant)
 
-	req, err := http.NewRequest("POST", TokenUrl, bytes.NewBufferString(data.Encode()))
+	req, err := http.NewRequest("POST", config.TokenUrl, bytes.NewBufferString(data.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	client := &http.Client{}

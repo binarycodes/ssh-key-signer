@@ -1,0 +1,4 @@
+ca_server_url: http://localhost:8088
+client_id: my-test-client
+client_secret: UTRtYkyYN1nbgdPPbBru1FDVsE8ye5JE
+token_url: http://10.88.0.134:8090/realms/my-test-realm/protocol/openid-connect/token
