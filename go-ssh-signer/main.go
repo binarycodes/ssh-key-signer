@@ -16,6 +16,14 @@ import (
 )
 
 var (
+	caServerUrl           = "http://localhost:8088"
+	HostSignUrl           = fmt.Sprintf("%v/rest/key/hostSign", caServerUrl)
+	UserSignUrl           = fmt.Sprintf("%v/rest/key/userSign", caServerUrl)
+	ClientId              = "my-test-client"
+	ClientSecret          = "UTRtYkyYN1nbgdPPbBru1FDVsE8ye5JE"
+	ClientCredentialGrant = "client_credentials"
+	TokenUrl              = "http://10.88.0.134:8090/realms/my-test-realm/protocol/openid-connect/token"
+
 	hostnameFlag = flag.String("hostname", "", "specify the hostname for the certificate")
 	keyFileFlag  = flag.String("keyfile", "", "path of the key file that is to be signed")
 )
@@ -90,8 +98,7 @@ func requestToSign(token string, hostname string, keyfile string) {
 		exitWithError(err)
 	}
 
-	postUrl := "http://localhost:8088/rest/key/hostSign"
-	req, err := http.NewRequest("POST", postUrl, postBody)
+	req, err := http.NewRequest("POST", HostSignUrl, postBody)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %v", token))
 
@@ -130,12 +137,11 @@ func saveSignedResponse(keyfile string, signedResponse SignedResponse) error {
 func accessToken() AccessToken {
 	// form data
 	data := url.Values{}
-	data.Set("client_id", "my-test-client")
-	data.Set("client_secret", "UTRtYkyYN1nbgdPPbBru1FDVsE8ye5JE")
-	data.Set("grant_type", "client_credentials")
+	data.Set("client_id", ClientId)
+	data.Set("client_secret", ClientSecret)
+	data.Set("grant_type", ClientCredentialGrant)
 
-	postUrl := "http://10.88.0.100:8090/realms/my-test-realm/protocol/openid-connect/token"
-	req, err := http.NewRequest("POST", postUrl, bytes.NewBufferString(data.Encode()))
+	req, err := http.NewRequest("POST", TokenUrl, bytes.NewBufferString(data.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	client := &http.Client{}
