@@ -19,11 +19,12 @@ import (
 )
 
 const (
-	ClientCredentialGrant = "client_credentials"
+	clientCredentialGrant = "client_credentials"
 )
 
 var (
 	version      = "undefined"
+	configPaths  = [2]string{"/etc/ssh-keysigner/config.yml", "config.yml"}
 	config       = loadConfig()
 	hostnameFlag = flag.String("hostname", "", "specify the hostname for the certificate")
 	keyFileFlag  = flag.String("keyfile", "", "path of the key file that is to be signed")
@@ -87,9 +88,19 @@ func main() {
 }
 
 func loadConfig() Config {
-	file, err := os.ReadFile("config.yml")
-	if err != nil {
-		exitWithError(err)
+	var file []byte
+	for _, configPath := range configPaths {
+		var err error
+		file, err = os.ReadFile(configPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "config not found at %v\n", configPath)
+		} else {
+			break
+		}
+	}
+
+	if file == nil {
+		exitWithError(errors.New("no config file found"))
 	}
 
 	var config Config
@@ -192,7 +203,7 @@ func accessToken() AccessToken {
 	data := url.Values{}
 	data.Set("client_id", config.ClientID)
 	data.Set("client_secret", config.ClientSecret)
-	data.Set("grant_type", ClientCredentialGrant)
+	data.Set("grant_type", clientCredentialGrant)
 
 	req, err := http.NewRequest("POST", config.TokenURL, bytes.NewBufferString(data.Encode()))
 	if err != nil {

@@ -64,7 +64,7 @@ tidy:
 ## clean: clean the build directory
 .PHONY: clean
 clean:
-	rm -r ./bin
+	rm -r ./bin || true
 
 ## build: build the application
 .PHONY: build
