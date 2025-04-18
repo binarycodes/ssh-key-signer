@@ -23,29 +23,31 @@ const (
 )
 
 var (
+	version      = "undefined"
 	config       = loadConfig()
 	hostnameFlag = flag.String("hostname", "", "specify the hostname for the certificate")
 	keyFileFlag  = flag.String("keyfile", "", "path of the key file that is to be signed")
+	versionFlag  = flag.Bool("version", false, "display version")
 )
 
-type CaRequestUrl interface {
-	hostSignUrl() string
-	userSignUrl() string
+type CaRequestURL interface {
+	hostSignURL() string
+	userSignURL() string
 }
 
 type Config struct {
-	CaServerUrl  string `mapstructure:"ca_server_url"`
-	ClientId     string `mapstructure:"client_id"`
+	CaServerURL  string `mapstructure:"ca_server_url"`
+	ClientID     string `mapstructure:"client_id"`
 	ClientSecret string `mapstructure:"client_secret"`
-	TokenUrl     string `mapstructure:"token_url"`
+	TokenURL     string `mapstructure:"token_url"`
 }
 
-func (config Config) hostSignUrl() string {
-	return fmt.Sprintf("%v/rest/key/hostSign", config.CaServerUrl)
+func (config Config) hostSignURL() string {
+	return fmt.Sprintf("%v/rest/key/hostSign", config.CaServerURL)
 }
 
-func (config Config) userSignUrl() string {
-	return fmt.Sprintf("%v/rest/key/userSign", config.CaServerUrl)
+func (config Config) userSignURL() string {
+	return fmt.Sprintf("%v/rest/key/userSign", config.CaServerURL)
 }
 
 type AccessToken struct {
@@ -69,6 +71,11 @@ type SignedResponse struct {
 
 func main() {
 	flag.Parse()
+
+	if *versionFlag {
+		fmt.Println(version)
+		os.Exit(0)
+	}
 
 	if *hostnameFlag == "" || *keyFileFlag == "" {
 		flag.Usage()
@@ -104,9 +111,9 @@ func loadConfig() Config {
 func readKeyFile(keyfile string) (string, error) {
 	keyfilePath := strings.TrimSpace(keyfile)
 
-	ext := filepath.Ext(keyfilePath)
-	if ext != ".pub" {
-		return "", errors.New("Only public key files are expected here. [Hint: name ending in .pub]")
+	extension := filepath.Ext(keyfilePath)
+	if extension != ".pub" {
+		return "", errors.New("only public key files are expected here. [Hint: name ending in .pub]")
 	}
 
 	if _, err := os.Stat(keyfilePath); err != nil {
@@ -140,7 +147,11 @@ func requestToSign(token string, hostname string, keyfile string) {
 		exitWithError(err)
 	}
 
-	req, err := http.NewRequest("POST", config.hostSignUrl(), postBody)
+	req, err := http.NewRequest("POST", config.hostSignURL(), postBody)
+	if err != nil {
+		exitWithError(err)
+	}
+
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %v", token))
 
@@ -154,7 +165,7 @@ func requestToSign(token string, hostname string, keyfile string) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		exitForHttpErrorResponse(*resp)
+		exitForHTTPErrorResponse(*resp)
 	}
 
 	signedResponse := &SignedResponse{}
@@ -179,11 +190,15 @@ func saveSignedResponse(keyfile string, signedResponse SignedResponse) error {
 func accessToken() AccessToken {
 	// form data
 	data := url.Values{}
-	data.Set("client_id", config.ClientId)
+	data.Set("client_id", config.ClientID)
 	data.Set("client_secret", config.ClientSecret)
 	data.Set("grant_type", ClientCredentialGrant)
 
-	req, err := http.NewRequest("POST", config.TokenUrl, bytes.NewBufferString(data.Encode()))
+	req, err := http.NewRequest("POST", config.TokenURL, bytes.NewBufferString(data.Encode()))
+	if err != nil {
+		exitWithError(err)
+	}
+
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	client := &http.Client{}
@@ -196,7 +211,7 @@ func accessToken() AccessToken {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		exitForHttpErrorResponse(*resp)
+		exitForHTTPErrorResponse(*resp)
 	}
 
 	accessToken := &AccessToken{}
@@ -216,7 +231,7 @@ func exitWithError(err error) {
 	os.Exit(1)
 }
 
-func exitForHttpErrorResponse(resp http.Response) {
+func exitForHTTPErrorResponse(resp http.Response) {
 	body, err := io.ReadAll(resp.Body)
 	fmt.Fprintf(os.Stderr, "HTTP status :: %v\n", resp.Status)
 	if err != nil {
