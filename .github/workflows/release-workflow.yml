@@ -41,6 +41,16 @@ jobs:
           mvn versions:set -DnewVersion=${{ needs.extract-version.outputs.clean_version }} -DprocessAllModules
           mvn versions:commit            
 
+      - name: Run the Action
+        uses: devops-infra/action-commit-push@master
+        with:
+          github_token: "${{ secrets.GITHUB_TOKEN }}"
+          add_timestamp: true
+          commit_prefix: "[AUTO]"
+          commit_message: "Automatic commit"
+          force: false
+          target_branch: ${{ github.ref_name }}
+
   docker-build:
     needs: prepare-release
     uses: ./.github/workflows/generic-workflow.yml
@@ -56,13 +66,17 @@ jobs:
       version: ${{ needs.extract-version.outputs.clean_version }}
 
   create-release:
-      needs: [docker-build, go-build]
-      uses: "marvinpinto/action-automatic-releases@latest"
-      with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "latest"
-        prerelease: true
-        title: "Development Build"
-        files: |
-          LICENSE.txt
-          go-ssh-signer/bin/ssh-keysign
+    needs: [docker-build, go-build]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "create pre release"
+        uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: "Development Build"
+          files: |
+            LICENSE.txt
+            go-ssh-signer/bin/ssh-keysign
