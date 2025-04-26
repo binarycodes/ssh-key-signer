@@ -99,13 +99,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: "create pre release"
-        uses: marvinpinto/action-automatic-releases@latest
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest"
+          tag_name: ${{ github.ref }}  # The tag that triggered the release
+          release_name: Release ${{ github.ref }}
+          draft: true
           prerelease: true
-          title: "Development Build"
-          files: |
-            LICENSE.txt
-            go-ssh-signer/bin/ssh-keysign
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: upload amd64 go binary as release asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ needs.go-build.outputs.binary_x64 }}  # Path to arm64 binary from reusable workflow's output
+          asset_name: ${{ needs.go-build.outputs.binary_name }}-linux-amd64
+          asset_content_type: application/octet-stream  # Content type for binaries
