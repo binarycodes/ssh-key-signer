@@ -9,11 +9,18 @@ on:
       - .github/workflows/go-build.yml
 
 jobs:
+  set-version:
+    runs-on: ubuntu-latest
+    outputs:
+      short_sha: ${{ steps.get-sha.outputs.short_sha }}
+    steps:
+      - name: Get short SHA
+        id: get-sha
+        run: echo "short_sha=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_OUTPUT
+
   run:
     uses: ./.github/workflows/go-build.yml
     with:
       service: go-ssh-signer
       artifact: ssh-keysign
-      version: ${GITHUB_SHA::7}
-    env:
-      GITHUB_SHA: ${{ github.sha }}
+      version: ${{ needs.set-version.outputs.short_sha }}
