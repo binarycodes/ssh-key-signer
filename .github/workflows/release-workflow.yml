@@ -16,7 +16,7 @@ jobs:
         id: strip
         run: echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
 
-  tagged-release:
+  prepare-release:
     needs: extract-version
 
     name: "tagged release"
@@ -39,26 +39,30 @@ jobs:
       - name: "update version to tag"
         run: |
           mvn versions:set -DnewVersion=${{ needs.extract-version.outputs.clean_version }} -DprocessAllModules
-          mvn versions:commit
+          mvn versions:commit            
 
-      - uses: ./.github/workflows/generic-workflow.yml
-        with:
-          service: ssh-key-signer-server
+  docker-build:
+    needs: prepare-release
+    uses: ./.github/workflows/generic-workflow.yml
+    with:
+      service: ssh-key-signer-server
 
-      - uses: ./.github/workflows/ssh-key-signer-server-docker.yml
+  go-build:
+    needs: prepare-release
+    uses: ./.github/workflows/go-build.yml
+    with:
+      service: go-ssh-signer
+      artifact: ssh-keysign
+      version: ${{ needs.extract-version.outputs.clean_version }}
 
-      - uses: ./.github/workflows/go-build.yml
-        with:
-          service: go-ssh-signer
-          artifact: ssh-keysign
-          version: ${{ needs.extract-version.outputs.clean_version }}
-
-      - uses: "marvinpinto/action-automatic-releases@latest"
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest"
-          prerelease: true
-          title: "Development Build"
-          files: |
-            LICENSE.txt
-            go-ssh-signer/bin/ssh-keysign
+  create-release:
+      needs: [docker-build, go-build]
+      uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "latest"
+        prerelease: true
+        title: "Development Build"
+        files: |
+          LICENSE.txt
+          go-ssh-signer/bin/ssh-keysign
