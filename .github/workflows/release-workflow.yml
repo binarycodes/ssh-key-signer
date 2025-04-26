@@ -78,10 +78,10 @@ jobs:
           echo "The SHA exported is: ${{ steps.get-latest-sha.outputs.updated-sha }}"
 
   docker-build:
-    needs: [extract-version, prepare-release]
+    needs: prepare-release
     uses: ./.github/workflows/ssh-key-signer-server-docker.yml
     with:
-      sha: ${{ needs.extract-version.outputs.updated-sha }}
+      sha: ${{ needs.prepare-release.outputs.updated-sha }}
 
   go-build:
     needs: [extract-version, prepare-release]
@@ -90,7 +90,7 @@ jobs:
       service: go-ssh-signer
       artifact: ssh-keysign
       artifactVersion: ${{ needs.extract-version.outputs.clean_version }}
-      sha: ${{ needs.extract-version.outputs.updated-sha }}
+      sha: ${{ needs.prepare-release.outputs.updated-sha }}
 
   create-release:
     needs: [docker-build, go-build]
