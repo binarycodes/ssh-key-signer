@@ -41,13 +41,13 @@ jobs:
           mvn versions:set -DnewVersion=${{ needs.extract-version.outputs.clean_version }} -DprocessAllModules
           mvn versions:commit
 
-      - uses: .github/workflows/generic-workflow.yml
+      - uses: ./.github/workflows/generic-workflow.yml
         with:
           service: ssh-key-signer-server
 
-      - uses: .github/workflows/ssh-key-signer-server-docker.yml
+      - uses: ./.github/workflows/ssh-key-signer-server-docker.yml
 
-      - uses: .github/workflows/go-build.yml
+      - uses: ./.github/workflows/go-build.yml
         with:
           service: go-ssh-signer
           artifact: ssh-keysign
