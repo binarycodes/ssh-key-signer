@@ -19,6 +19,7 @@ jobs:
         run: echo "short_sha=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_OUTPUT
 
   run:
+    needs: set-version
     uses: ./.github/workflows/go-build.yml
     with:
       service: go-ssh-signer
