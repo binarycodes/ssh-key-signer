@@ -37,17 +37,14 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: install xmllint
-        run: sudo apt install -y libxml2-utils
-
       - name: build with maven
         run: mvn clean package --projects ${{ env.PROJECT }} --also-make --batch-mode -Pproduction
 
       - name: extract project version
         id: extract_version
         run: |
-          echo "MAVEN_NAME=$(xmllint --xpath '/*[local-name()="project"]/*[local-name()="artifactId"]/text()' ${{ env.PROJECT }}/pom.xml)" >> $GITHUB_OUTPUT
-          echo "MAVEN_VERSION=$(xmllint --xpath '/*[local-name()="project"]/*[local-name()="version"]/text()' ${{ env.PROJECT }}/pom.xml)" >> $GITHUB_OUTPUT
+          echo "MAVEN_NAME=$(mvn help:evaluate -Dexpression=project.artifactId --projects ${{ env.PROJECT }} -q -DforceStdout)" >> $GITHUB_OUTPUT
+          echo "MAVEN_VERSION=$(mvn help:evaluate -Dexpression=project.version --projects ${{ env.PROJECT }} -q -DforceStdout)" >> $GITHUB_OUTPUT
 
       - name: login to docker hub
         uses: docker/login-action@v3
@@ -101,5 +98,5 @@ jobs:
           DIGEST: ${{ steps.build-and-push.outputs.digest }}
         run: |
           echo "${TAGS}" | while read tag; do
-            cosign sign --key cosign.key $tag
+            cosign sign --key cosign.key --yes $tag
           done
