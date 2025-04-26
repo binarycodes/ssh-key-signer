@@ -73,6 +73,10 @@ jobs:
           NEW_SHA=$(git rev-parse main)
           echo "updated-sha=$NEW_SHA" >> $GITHUB_OUTPUT
 
+      - name: debug the SHA
+        run: |
+          echo "The SHA exported is: ${{ steps.get-latest-sha.outputs.updated-sha }}"
+
   docker-build:
     needs: prepare-release
     uses: ./.github/workflows/ssh-key-signer-server-docker.yml
