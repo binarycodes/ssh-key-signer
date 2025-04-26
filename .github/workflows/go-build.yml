@@ -43,7 +43,7 @@ jobs:
           go-version: ${{ matrix.go-version }}
 
       - name: build
-        run: make build version="${{ inputs.artifactVersion }}"
+        run: make build version="${{ inputs.artifactVersion }}" goVersion="-${{ matrix.go-version }}"
 
       - name: upload build artifact
         uses: actions/upload-artifact@v4

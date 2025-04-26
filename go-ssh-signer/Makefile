@@ -2,6 +2,9 @@
 main_package_path = .
 binary_name = ssh-keysign
 version ?= $(shell git describe --always --long --dirty)
+os ?= linux
+arch ?= amd64
+goVersion ?=
 # ==================================================================================== #
 # HELPERS
 # ==================================================================================== #
@@ -70,7 +73,7 @@ clean:
 .PHONY: build
 build:
 	mkdir -p bin
-	go build -v -ldflags="-X main.version=${version}" -o=./bin/${binary_name} ${main_package_path}
+	go build -v -ldflags="-X main.version=${version}" -o=./bin/${binary_name}-${os}-${arch}${goVersion} ${main_package_path}
 
 ## run: run the application
 .PHONY: run
