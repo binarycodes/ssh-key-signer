@@ -14,3 +14,4 @@ jobs:
     with:
       service: go-ssh-signer
       artifact: ssh-keysign
+      version: ${{ github.sha }}

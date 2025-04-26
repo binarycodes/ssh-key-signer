@@ -9,6 +9,9 @@ on:
       artifact:
         required: true
         type: string
+      version:
+        required: true
+        type: string
         
 jobs:
   build:
@@ -34,7 +37,7 @@ jobs:
           go-version: ${{ matrix.go-version }}
 
       - name: build
-        run: make build
+        run: make build version="${{ inputs.version }}"
 
       - name: upload build artifact
         uses: actions/upload-artifact@v4
