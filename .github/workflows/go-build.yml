@@ -1,4 +1,4 @@
-name: generic-go-build
+name: generic-go-versionbuild
 
 on:
   workflow_call:
@@ -9,7 +9,7 @@ on:
       artifact:
         required: true
         type: string
-      version:
+      artifactVersion:
         required: true
         type: string
         
@@ -37,7 +37,7 @@ jobs:
           go-version: ${{ matrix.go-version }}
 
       - name: build
-        run: make build version="${{ inputs.version }}"
+        run: make build version="${{ inputs.artifactVersion }}"
 
       - name: upload build artifact
         uses: actions/upload-artifact@v4

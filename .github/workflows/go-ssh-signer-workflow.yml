@@ -24,4 +24,4 @@ jobs:
     with:
       service: go-ssh-signer
       artifact: ssh-keysign
-      version: ${{ needs.set-version.outputs.short_sha }}
+      artifactVersion: ${{ needs.set-version.outputs.short_sha }}
