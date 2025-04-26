@@ -6,6 +6,12 @@ on:
     paths:
       - ssh-key-signer-server/**
       - .github/workflows/ssh-key-signer-server-docker.yml
+  workflow_call:
+    inputs:
+      sha:
+        required: false
+        type: string
+        default: ${{ github.sha }}
 env:
   REGISTRY: docker.io
   IMAGE_NAME: ${{ github.repository }}
@@ -17,6 +23,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.sha }}
+
       - name: set up jdk
         uses: actions/setup-java@v4
         with:

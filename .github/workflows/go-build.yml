@@ -12,6 +12,10 @@ on:
       artifactVersion:
         required: true
         type: string
+      sha:
+        required: false
+        type: string
+        default: ${{ github.sha }}
         
 jobs:
   build:
@@ -30,6 +34,8 @@ jobs:
     steps:
       - name: checkout sources
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.sha }}
 
       - name: setup Go ${{ matrix.go-version }}
         uses: actions/setup-go@v5

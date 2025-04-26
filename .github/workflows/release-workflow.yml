@@ -22,6 +22,9 @@ jobs:
     name: "tagged release"
     runs-on: ubuntu-latest
 
+    outputs:
+      updated-sha: ${{ steps.get-latest-sha.outputs.updated-sha }}
+
     steps:
       - name: "build & test"
         run: |
@@ -66,19 +69,24 @@ jobs:
           # cleanup temp branch
           git branch -d temp-from-tag
 
+      - name: Get updated tag commit SHA
+        id: get-latest-sha
+        run: |
+          NEW_SHA=$(git rev-parse ${{ github.ref_name }})
+          echo "updated-sha=$NEW_SHA" >> $GITHUB_OUTPUT
+
   docker-build:
     needs: prepare-release
-    uses: ./.github/workflows/generic-workflow.yml
-    with:
-      service: ssh-key-signer-server
+    uses: ./.github/workflows/ssh-key-signer-server-docker.yml
 
   go-build:
-    needs: prepare-release
+    needs: [extract-version, prepare-release]
     uses: ./.github/workflows/go-build.yml
     with:
       service: go-ssh-signer
       artifact: ssh-keysign
       artifactVersion: ${{ needs.extract-version.outputs.clean_version }}
+      sha: ${{ needs.extract-version.outputs.updated-sha }}
 
   create-release:
     needs: [docker-build, go-build]
