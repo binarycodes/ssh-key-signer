@@ -49,7 +49,7 @@ jobs:
           commit_prefix: "[AUTO]"
           commit_message: "Automatic commit"
           force: false
-          target_branch: ${{ github.ref_name }}
+          target_branch: main
 
   docker-build:
     needs: prepare-release
