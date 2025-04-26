@@ -1,7 +1,7 @@
 # Change these variables as necessary.
 main_package_path = .
 binary_name = ssh-keysign
-version = $(shell git describe --always --long --dirty)
+version ?= $(shell git describe --always --long --dirty)
 # ==================================================================================== #
 # HELPERS
 # ==================================================================================== #
