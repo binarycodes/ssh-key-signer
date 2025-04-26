@@ -26,9 +26,9 @@ jobs:
       updated-sha: ${{ steps.get-latest-sha.outputs.updated-sha }}
 
     steps:
-      - name: "build & test"
+      - name: "display tag name"
         run: |
-            echo "found tag name ${{ needs.extract-version.outputs.clean_version }}"  
+            echo "found tag name ${{ needs.extract-version.outputs.clean_version }}"
 
       - name: checkout sources
         uses: actions/checkout@v4
@@ -45,6 +45,7 @@ jobs:
           mvn versions:commit            
 
       - name: commit new version
+        id: get-latest-sha
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "GitHub Actions"
@@ -68,16 +69,15 @@ jobs:
           
           # cleanup temp branch
           git branch -d temp-from-tag
-
-      - name: Get updated tag commit SHA
-        id: get-latest-sha
-        run: |
+          
           NEW_SHA=$(git rev-parse main)
           echo "updated-sha=$NEW_SHA" >> $GITHUB_OUTPUT
 
   docker-build:
     needs: prepare-release
     uses: ./.github/workflows/ssh-key-signer-server-docker.yml
+    with:
+      sha: ${{ needs.extract-version.outputs.updated-sha }}
 
   go-build:
     needs: [extract-version, prepare-release]

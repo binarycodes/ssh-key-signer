@@ -22,6 +22,10 @@ jobs:
     if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
+      - name: "display sha"
+        run: |
+          echo "found sha ${{ inputs.sha }}"  
+
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.sha }}
