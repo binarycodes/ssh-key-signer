@@ -83,6 +83,7 @@ jobs:
     uses: ./.github/workflows/ssh-key-signer-server-docker.yml
     with:
       sha: ${{ needs.prepare-release.outputs.updated-sha }}
+    secrets: inherit
 
   go-build:
     needs: [extract-version, prepare-release]
