@@ -47,7 +47,7 @@ jobs:
           git config --global user.name "GitHub Actions"
 
           # create a temporary branch from the tag
-          git checkout -b temp-from-tag
+          git switch -c temp-from-tag
           
           git add .
           git commit -m "Update version to ${{ needs.extract-version.outputs.clean_version }}"
@@ -59,7 +59,7 @@ jobs:
           git push origin ${{ github.ref_name }} --force
       
           # merge to main
-          git checkout main
+          git switch main
           git merge temp-from-tag --no-ff -m "Merge tag ${{ github.ref_name }} changes into main"
       
           git push origin main
