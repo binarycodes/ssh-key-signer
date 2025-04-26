@@ -42,6 +42,7 @@ jobs:
       - name: "update version to tag"
         run: |
           mvn versions:set -DnewVersion=${{ needs.extract-version.outputs.clean_version }} -DprocessAllModules
+          mvn versions:update-properties -DincludeProperties=ssh-signer-common-lib.version
           mvn versions:commit            
 
       - name: commit new version
