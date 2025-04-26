@@ -86,7 +86,7 @@ jobs:
       - name: write cosign key to file
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
-          echo "${{ secrets.COSIGN_PRIVARY_KEY }}" >> cosign.key
+          echo "${{ secrets.COSIGN_PRIVATE_KEY }}" >> cosign.key
 
       - name: sign the published docker image
         if: startsWith(github.ref, 'refs/tags/v')
