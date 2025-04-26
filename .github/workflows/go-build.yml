@@ -51,9 +51,3 @@ jobs:
           name: ${{ inputs.artifact }}-${{ matrix.go-version }}
           path: ${{ inputs.service}}/bin/${{ inputs.artifact }}
           retention-days: 5
-
-      - name: set output for build files
-        id: outputs
-        run: |
-          echo "::set-output name=binary_x64::${{ inputs.service}}/bin/${{ inputs.artifact }}"
-          echo "::set-output name=binary_name::${{ inputs.artifact }}"

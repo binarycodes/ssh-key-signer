@@ -86,11 +86,9 @@ jobs:
       - name: sign the published docker image
         if: startsWith(github.ref, 'refs/tags/v')
         env:
+          COSIGN_EXPERIMENTAL: "true"
           TAGS: ${{ steps.meta.outputs.tags }}
           DIGEST: ${{ steps.build-and-push.outputs.digest }}
         # This step uses the identity token to provision an ephemeral certificate
         # against the sigstore community Fulcio instance.
-        run: |
-          echo "${TAGS}" | while read tag; do
-            cosign sign --yes $tag
-          done
+        run: cosign sign --yes ghcr.io/your-org/your-image@${DIGEST}

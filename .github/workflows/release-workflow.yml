@@ -110,10 +110,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: upload amd64 go binary as release asset
-        uses: actions/upload-release-asset@v1
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ needs.go-build.outputs.binary_x64 }}  # Path to arm64 binary from reusable workflow's output
-          asset_name: ${{ needs.go-build.outputs.binary_name }}-linux-amd64
-          asset_content_type: application/octet-stream  # Content type for binaries
+          path: ./dist
+
+      - name: Upload artifacts to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./dist/**/*
