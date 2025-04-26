@@ -99,7 +99,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Create release
+      - name: create release
         id: create_release
         uses: actions/create-release@v1
         with:
@@ -110,13 +110,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Download build artifacts
+      - name: download build artifacts
         uses: actions/download-artifact@v4
         with:
           path: ./dist
           pattern: ssh-keysign*
 
-      - name: Upload artifacts to Release
+      - name: move downloaded artifacts up
+        run: |
+          mkdir -p flat-dist
+          find dist/ -type f -exec mv {} flat-dist/ \;
+
+      - name: upload artifacts to Release
         uses: softprops/action-gh-release@v2
         with:
-          files: ./dist/*
+          files: ./flat-dist/*
