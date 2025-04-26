@@ -41,15 +41,17 @@ jobs:
           mvn versions:set -DnewVersion=${{ needs.extract-version.outputs.clean_version }} -DprocessAllModules
           mvn versions:commit            
 
-      - name: Run the Action
-        uses: devops-infra/action-commit-push@master
-        with:
-          github_token: "${{ secrets.GITHUB_TOKEN }}"
-          add_timestamp: true
-          commit_prefix: "[AUTO]"
-          commit_message: "Automatic commit"
-          force: false
-          target_branch: main
+      - name: commit new version
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "GitHub Actions"
+          git add .
+          git commit -m "update version to ${{ needs.extract-version.outputs.clean_version }}"
+          git push origin ${{ github.ref_name }}
+          git fetch origin main
+          git checkout main
+          git merge ${{ github.ref_name }} --no-ff -m "Merge tag ${{ github.ref_name }} into main"
+          git push origin main
 
   docker-build:
     needs: prepare-release
