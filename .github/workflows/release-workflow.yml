@@ -45,15 +45,27 @@ jobs:
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "GitHub Actions"
-      
+
+          # create a temporary branch from the tag
+          git checkout -b temp-from-tag
+          
           git add .
           git commit -m "Update version to ${{ needs.extract-version.outputs.clean_version }}"
-          git push --force-with-lease
+          
+          # move the tag to the new commit
+          git tag -f ${{ github.ref_name }}
+          
+          # push the updated tag (force is required since it already exists)
+          git push origin ${{ github.ref_name }} --force
       
+          # merge to main
           git checkout main
-          git merge ${{ github.ref_name }} --no-ff -m "Merge tag ${{ github.ref_name }} changes into main"
+          git merge temp-from-tag --no-ff -m "Merge tag ${{ github.ref_name }} changes into main"
       
           git push origin main
+          
+          # cleanup temp branch
+          git branch -d temp-from-tag
 
   docker-build:
     needs: prepare-release
