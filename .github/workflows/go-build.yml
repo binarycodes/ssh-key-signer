@@ -49,5 +49,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.artifact }}-${{ matrix.go-version }}
-          path: ${{ inputs.service}}/bin/${{ inputs.artifact }}
+          path: ${{ inputs.service}}/bin/${{ inputs.artifact }}*
           retention-days: 5
