@@ -79,9 +79,14 @@ jobs:
             APP_NAME=${{ steps.extract_version.outputs.MAVEN_NAME }}
             APP_VERSION=${{ steps.extract_version.outputs.MAVEN_VERSION }}
 
-      - name: Install Cosign
+      - name: install Cosign
         if: startsWith(github.ref, 'refs/tags/v')
         uses: sigstore/cosign-installer@v3.8.1
+
+      - name: write cosign key to file
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          echo "${{ secrets.COSIGN_PRIVARY_KEY }}" >> cosign.key
 
       - name: sign the published docker image
         if: startsWith(github.ref, 'refs/tags/v')
@@ -91,4 +96,7 @@ jobs:
           DIGEST: ${{ steps.build-and-push.outputs.digest }}
         # This step uses the identity token to provision an ephemeral certificate
         # against the sigstore community Fulcio instance.
-        run: cosign sign --yes ghcr.io/your-org/your-image@${DIGEST}
+        run: |
+          echo "${TAGS}" | while read tag; do
+            cosign sign --key cosign.key $tag
+          done
