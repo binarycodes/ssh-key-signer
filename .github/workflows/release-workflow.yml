@@ -52,13 +52,12 @@ jobs:
           git add .
           git commit -m "Update version to ${{ needs.extract-version.outputs.clean_version }}"
           
-          # move the tag to the new commit
+          # force move the tag to the new commit
           git tag -f ${{ github.ref_name }}
-          
-          # push the updated tag (force is required since it already exists)
           git push origin ${{ github.ref_name }} --force
       
           # merge to main
+          git fetch origin
           git switch main
           git merge temp-from-tag --no-ff -m "Merge tag ${{ github.ref_name }} changes into main"
       
