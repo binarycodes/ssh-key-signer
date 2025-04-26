@@ -6,9 +6,6 @@ on:
     tags:
       - "v*"
 
-env:
-  GO_ARTIFACT_NAME: ssh-keysign
-
 jobs:
   extract-version:
     runs-on: ubuntu-latest
@@ -93,7 +90,7 @@ jobs:
     uses: ./.github/workflows/go-build.yml
     with:
       service: go-ssh-signer
-      artifact: ${{ env.GO_ARTIFACT_NAME }}
+      artifact: ssh-keysign
       artifactVersion: ${{ needs.extract-version.outputs.clean_version }}
       sha: ${{ needs.prepare-release.outputs.updated-sha }}
 
@@ -117,7 +114,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: ./dist
-          pattern: "${{ env.GO_ARTIFACT_NAME }}*"
+          pattern: ssh-keysign*
 
       - name: Upload artifacts to Release
         uses: softprops/action-gh-release@v2
