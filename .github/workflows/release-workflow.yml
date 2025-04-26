@@ -72,7 +72,7 @@ jobs:
       - name: Get updated tag commit SHA
         id: get-latest-sha
         run: |
-          NEW_SHA=$(git rev-parse ${{ github.ref_name }})
+          NEW_SHA=$(git rev-parse main)
           echo "updated-sha=$NEW_SHA" >> $GITHUB_OUTPUT
 
   docker-build:
