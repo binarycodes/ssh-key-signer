@@ -9,7 +9,7 @@ DB_NAME: app_db
 DB_USERNAME: app_user
 DB_PASSWORD: app_user_pw
 
-CA_USER_PATH: "user_ca_key"
-CA_HOST_PATH: "host_ca_key"
+CA_USER_PATH: "../test/ca/user_ca_key"
+CA_HOST_PATH: "../test/ca/host_ca_key"
 CA_USER_VALIDITY: 1
 CA_HOST_VALIDITY: 365
