@@ -5,7 +5,7 @@
 
     <groupId>io.binarycodes.homelab</groupId>
     <artifactId>ssh-key-signer-server</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
     <packaging>jar</packaging>
 
     <name>Server - SSH Key Signer</name>
