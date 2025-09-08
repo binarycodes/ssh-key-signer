@@ -31,6 +31,9 @@ public class KeyService {
         this.applicationProperties = applicationProperties;
     }
 
+    /**
+     * Generates new ED25519 keys
+     */
     public Optional<KeyInfo> generateKey(String comment, String passphrase) {
         try {
             var pair = SshKeyPairGenerator.generateKeyPair(SshKeyPairGenerator.ED25519);
@@ -41,6 +44,9 @@ public class KeyService {
         return Optional.empty();
     }
 
+    /**
+     * Generates new keys and signs it
+     */
     public Optional<SignedKeyInfo> generateHostSignedKey(String comment, String passphrase, String hostname, int validityDays, KeyInfo caKey, String caPassphrase) {
         var generatedKey = generateKey(comment, passphrase);
 
@@ -58,6 +64,9 @@ public class KeyService {
         });
     }
 
+    /**
+     * Generates new keys and signs it
+    */
     public Optional<SignedKeyInfo> generateUserSignedKey(String comment, String passphrase, String principalName, int validityDays, KeyInfo caKey, String caPassphrase) {
         var generatedKey = generateKey(comment, passphrase);
 
@@ -98,10 +107,16 @@ public class KeyService {
         return SshPrivateKeyFileFactory.parse(keyInfo.privateKey().getBytes(StandardCharsets.UTF_8)).toKeyPair(passphrase);
     }
 
+    /**
+     * Signs the given key for user
+     */
     public Optional<SignedPublicKeyDownload> signUserKey(String filename, byte[] bytes, String principalName) {
         return signKey(SIGN_TYPE.USER, filename, bytes, principalName);
     }
 
+    /**
+     * Signs the given key for host
+     */
     public Optional<SignedPublicKeyDownload> signHostKey(String filename, byte[] bytes, String hostName) {
         return signKey(SIGN_TYPE.HOST, filename, bytes, hostName);
     }
@@ -113,9 +128,9 @@ public class KeyService {
 
             var signed = switch (signType) {
                 case USER ->
-                        SshCertificateAuthority.generateUserCertificate(keyPairToSign, 0L, typeData, 1, readUserCAKeys());
+                        SshCertificateAuthority.generateUserCertificate(keyPairToSign, 0L, typeData, applicationProperties.caUserValidity(), readUserCAKeys());
                 case HOST ->
-                        SshCertificateAuthority.generateHostCertificate(keyPairToSign, 0L, typeData, 1, readHostCAKeys());
+                        SshCertificateAuthority.generateHostCertificate(keyPairToSign, 0L, typeData, applicationProperties.caHostValidity(), readHostCAKeys());
             };
 
             var signedKey = SshPublicKeyFileFactory.create(signed.getCertificate(), publicKeyFileToSign.getComment(), SshPublicKeyFileFactory.OPENSSH_FORMAT);

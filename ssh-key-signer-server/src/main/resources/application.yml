@@ -4,6 +4,8 @@ server:
 app:
   ca_user_path: ${CA_USER_PATH}
   ca_host_path: ${CA_HOST_PATH}
+  ca_user_validity: ${CA_USER_VALIDITY}
+  ca_host_validity: ${CA_HOST_VALIDITY}
 
 spring:
   profiles:
