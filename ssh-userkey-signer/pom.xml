@@ -6,20 +6,20 @@
 
     <groupId>io.binarycodes.homelab</groupId>
     <artifactId>ssh-userkey-signer</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
 
     <name>Sign User Key - SSH Key Signer</name>
 
     <properties>
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <ssh-signer-common-lib.version>0.0.1</ssh-signer-common-lib.version>
+        <ssh-signer-common-lib.version>0.0.2</ssh-signer-common-lib.version>
     </properties>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.0</version>
+        <version>3.5.5</version>
     </parent>
 
     <dependencyManagement>

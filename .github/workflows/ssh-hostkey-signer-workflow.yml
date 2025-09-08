@@ -2,7 +2,7 @@ name: ssh-hostkey-signer
 
 on:
   push:
-    branches: [ main ]
+    branches: [ '*' ]
     paths:
       - ssh-hostkey-signer/**
       - .github/workflows/ssh-hostkey-signer-workflow.yml

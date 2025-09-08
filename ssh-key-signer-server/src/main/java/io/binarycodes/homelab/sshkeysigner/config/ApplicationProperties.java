@@ -5,6 +5,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "app")
 public record ApplicationProperties(
         String caUserPath,
-        String caHostPath
+        String caHostPath,
+        Integer caUserValidity,
+        Integer caHostValidity
 ) {
 }
