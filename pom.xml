@@ -7,7 +7,7 @@
     <groupId>io.binarycodes.homelab</groupId>
     <artifactId>ssh-signer-mono</artifactId>
     <name>Monorepo - SSH KeySigner</name>
-    <version>0.0.2</version>
+    <version>0.0.3</version>
 
     <packaging>pom</packaging>
 
