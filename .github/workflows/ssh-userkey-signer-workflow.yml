@@ -2,7 +2,7 @@ name: ssh-userkey-signer
 
 on:
   push:
-    branches: [ main ]
+    branches: [ * ]
     paths:
       - ssh-userkey-signer/**
       - .github/workflows/ssh-userkey-signer-workflow.yml

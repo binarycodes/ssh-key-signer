@@ -2,7 +2,7 @@ name: create and publish docker container
 
 on:
   push:
-    branches: [ main ]
+    branches: [ * ]
     paths:
       - ssh-key-signer-server/**
       - .github/workflows/ssh-key-signer-server-docker.yml

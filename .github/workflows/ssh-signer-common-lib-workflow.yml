@@ -2,7 +2,7 @@ name: ssh-signer-common-lib
 
 on:
   push:
-    branches: [ main ]
+    branches: [ * ]
     paths:
       - ssh-signer-common-lib/**
       - .github/workflows/ssh-signer-common-lib-workflow.yml
