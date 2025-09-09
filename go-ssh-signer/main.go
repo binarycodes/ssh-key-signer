@@ -23,12 +23,13 @@ const (
 )
 
 var (
-	version      = "undefined"
-	configPaths  = [2]string{"/etc/ssh-keysigner/config.yml", "config.yml"}
-	config       = loadConfig()
-	hostnameFlag = flag.String("hostname", "", "specify the hostname for the certificate")
-	keyFileFlag  = flag.String("keyfile", "", "path of the key file that is to be signed")
-	versionFlag  = flag.Bool("version", false, "display version")
+	version        = "undefined"
+	configPaths    = [2]string{"/etc/ssh-keysigner/config.yml", "config.yml"}
+	configPathFlag = flag.String("config", "", "path of the config file")
+	hostnameFlag   = flag.String("hostname", "", "specify the hostname for the certificate")
+	keyFileFlag    = flag.String("keyfile", "", "path of the key file that is to be signed")
+	versionFlag    = flag.Bool("version", false, "display version")
+	config         Config
 )
 
 type CaRequestURL interface {
@@ -79,25 +80,19 @@ func main() {
 	}
 
 	if *hostnameFlag == "" || *keyFileFlag == "" {
+		_, _ = fmt.Fprintln(os.Stderr, "Error: -hostname and -keyfile flag is required")
 		flag.Usage()
 		os.Exit(1)
 	}
+
+	config = loadConfig()
 
 	token := accessToken()
 	requestToSign(token.AccessToken, *hostnameFlag, *keyFileFlag)
 }
 
 func loadConfig() Config {
-	var file []byte
-	for _, configPath := range configPaths {
-		var err error
-		file, err = os.ReadFile(configPath)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "config not found at %v\n", configPath)
-		} else {
-			break
-		}
-	}
+	var file = readConfig()
 
 	if file == nil {
 		exitWithError(errors.New("no config file found"))
@@ -117,6 +112,29 @@ func loadConfig() Config {
 	}
 
 	return config
+}
+
+func readConfig() []byte {
+	var file []byte
+	var err error
+
+	if *configPathFlag != "" {
+		file, err = os.ReadFile(*configPathFlag)
+		if err != nil {
+			log.Fatalf("Error reading config file: %v - %v", *configPathFlag, err)
+		}
+	} else {
+		for _, configPath := range configPaths {
+			file, err = os.ReadFile(configPath)
+			if err != nil {
+				_, _ = fmt.Fprintf(os.Stderr, "config not found at %v\n", configPath)
+			} else {
+				break
+			}
+		}
+	}
+
+	return file
 }
 
 func readKeyFile(keyfile string) (string, error) {
@@ -187,6 +205,8 @@ func requestToSign(token string, hostname string, keyfile string) {
 	if err := saveSignedResponse(keyfile, *signedResponse); err != nil {
 		exitWithError(err)
 	}
+
+	log.Printf("cert signed successfully")
 }
 
 func saveSignedResponse(keyfile string, signedResponse SignedResponse) error {
@@ -238,13 +258,12 @@ func accessToken() AccessToken {
 }
 
 func exitWithError(err error) {
-	fmt.Fprintf(os.Stderr, "Exit for ERROR :: %v\n", err.Error())
-	os.Exit(1)
+	log.Fatalf("Exit for ERROR :: %v\n", err.Error())
 }
 
 func exitForHTTPErrorResponse(resp http.Response) {
 	body, err := io.ReadAll(resp.Body)
-	fmt.Fprintf(os.Stderr, "HTTP status :: %v\n", resp.Status)
+	log.Printf("HTTP status :: %v\n", resp.Status)
 	if err != nil {
 		exitWithError(err)
 	}
