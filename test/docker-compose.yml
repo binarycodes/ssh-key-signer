@@ -1,4 +1,4 @@
-name: test-cakeyserver
+name: ca
 
 networks:
   keyserver:
@@ -54,12 +54,10 @@ services:
       timeout: 2s
       retries: 15
     command: --verbose start-dev --health-enabled=true --import-realm
-    container_name: app_sso
     networks:
       - keyserver
   sso-init:
     image: node:latest
-    container_name: sso-init
     depends_on:
       sso:
         condition: service_healthy
