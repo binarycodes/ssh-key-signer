@@ -5,6 +5,7 @@ import io.binarycodes.homelab.lib.SignedPublicKeyDownload;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -28,9 +29,24 @@ public class KeyController {
     }
 
     @PostMapping("/userSign")
-    public ResponseEntity<SignedPublicKeyDownload> signUserKey(@RequestBody SignPublicKeyRequest signPublicKeyRequest) {
+    public ResponseEntity<SignedPublicKeyDownload> signUserKey(JwtAuthenticationToken principal, @RequestBody SignPublicKeyRequest signPublicKeyRequest) {
+        if (principal == null) {
+            log.fatal("No principal. Refusing to sign certificate for \"{}\".", signPublicKeyRequest.principal());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .build();
+        }
+
+        if (!principal.getName()
+                .equals(signPublicKeyRequest.principal())) {
+            log.fatal("Invalid principal - \"{}\". Request and authorization do not match. Refusing to sign certificate for \"{}\".",
+                    principal.getName(), signPublicKeyRequest.principal());
+
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .build();
+        }
+
         var signed = keyService.signUserKey(signPublicKeyRequest.filename(), signPublicKeyRequest.publicKey()
-                .getBytes(StandardCharsets.UTF_8), signPublicKeyRequest.data());
+                .getBytes(StandardCharsets.UTF_8), signPublicKeyRequest.principal());
 
         return signed.map(signedPublicKeyDownload -> {
                     return ResponseEntity.ok()
@@ -43,7 +59,7 @@ public class KeyController {
     @PostMapping("/hostSign")
     public ResponseEntity<SignedPublicKeyDownload> signHostKey(@RequestBody SignPublicKeyRequest signPublicKeyRequest) {
         var signed = keyService.signHostKey(signPublicKeyRequest.filename(), signPublicKeyRequest.publicKey()
-                .getBytes(StandardCharsets.UTF_8), signPublicKeyRequest.data());
+                .getBytes(StandardCharsets.UTF_8), signPublicKeyRequest.principal());
 
         return signed.map(signedPublicKeyDownload -> {
                     return ResponseEntity.ok()

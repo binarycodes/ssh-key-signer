@@ -1,4 +1,4 @@
-name: ssh-key-signer
+name: dev-ca
 
 networks:
   local:
@@ -24,7 +24,6 @@ services:
       interval: 5s
       timeout: 2s
       retries: 15
-    container_name: app_db
     networks:
       - local
   sso:
@@ -55,18 +54,16 @@ services:
       timeout: 2s
       retries: 15
     command: --verbose start-dev --health-enabled=true --import-realm
-    container_name: app_sso
     networks:
       - local
   sso-init:
     image: node:latest
-    container_name: sso-init
     depends_on:
       sso:
         condition: service_healthy
     volumes:
       - ./keycloak/init.js:/tmp/init.js
-    entrypoint: ["node", "/tmp/init.js"]
+    entrypoint: [ "node", "/tmp/init.js" ]
     environment:
       KC_ADMIN_USERNAME: admin
       KC_ADMIN_PASSWORD: admin

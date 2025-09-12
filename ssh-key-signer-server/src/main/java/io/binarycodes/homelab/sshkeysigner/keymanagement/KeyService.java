@@ -24,7 +24,7 @@ public class KeyService {
     private final ApplicationProperties applicationProperties;
 
     private enum SIGN_TYPE {
-        USER, HOST;
+        USER, HOST
     }
 
     public KeyService(ApplicationProperties applicationProperties) {
@@ -66,7 +66,7 @@ public class KeyService {
 
     /**
      * Generates new keys and signs it
-    */
+     */
     public Optional<SignedKeyInfo> generateUserSignedKey(String comment, String passphrase, String principalName, int validityDays, KeyInfo caKey, String caPassphrase) {
         var generatedKey = generateKey(comment, passphrase);
 
@@ -104,7 +104,9 @@ public class KeyService {
     }
 
     private SshKeyPair keyInfoToKeyPair(KeyInfo keyInfo, String passphrase) throws IOException, InvalidPassphraseException {
-        return SshPrivateKeyFileFactory.parse(keyInfo.privateKey().getBytes(StandardCharsets.UTF_8)).toKeyPair(passphrase);
+        return SshPrivateKeyFileFactory.parse(keyInfo.privateKey()
+                        .getBytes(StandardCharsets.UTF_8))
+                .toKeyPair(passphrase);
     }
 
     /**
@@ -147,10 +149,12 @@ public class KeyService {
     }
 
     private SshKeyPair readUserCAKeys() throws IOException, InvalidPassphraseException {
-        return SshPrivateKeyFileFactory.parse(Path.of(applicationProperties.caUserPath())).toKeyPair("");
+        return SshPrivateKeyFileFactory.parse(Path.of(applicationProperties.caUserPath()))
+                .toKeyPair("");
     }
 
     private SshKeyPair readHostCAKeys() throws IOException, InvalidPassphraseException {
-        return SshPrivateKeyFileFactory.parse(Path.of(applicationProperties.caHostPath())).toKeyPair("");
+        return SshPrivateKeyFileFactory.parse(Path.of(applicationProperties.caHostPath()))
+                .toKeyPair("");
     }
 }
