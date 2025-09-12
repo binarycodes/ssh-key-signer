@@ -63,7 +63,7 @@ type AccessToken struct {
 type SignRequest struct {
 	Filename  string `json:"filename"`
 	PublicKey string `json:"publicKey"`
-	Hostname  string `json:"data"`
+	Hostname  string `json:"principal"`
 }
 
 type SignedResponse struct {

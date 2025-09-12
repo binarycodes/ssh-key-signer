@@ -6,6 +6,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -38,25 +39,32 @@ public class SignerService {
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer %s".formatted(token))
                 .build();
 
-        var response = restClient.post()
+        ResponseEntity<SignedPublicKeyDownload> response = restClient.post()
                 .uri("/rest/key/userSign")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(signPublicKeyRequest)
-                .retrieve()
-                .toEntity(SignedPublicKeyDownload.class);
+                .exchange((request, responseObj) -> {
+                    var status = responseObj.getStatusCode();
+                    if (status.is2xxSuccessful()) {
+                        return ResponseEntity.ok(responseObj.bodyTo(SignedPublicKeyDownload.class));
+                    } else {
+                        return ResponseEntity.status(status)
+                                .build();
+                    }
+                });
 
-        var signedPublicKeyDownload = response.getBody();
-        if (response.getStatusCode()
-                .is2xxSuccessful() && signedPublicKeyDownload != null) {
+        if (response != null && response.getStatusCode()
+                .is2xxSuccessful() && response.getBody() != null) {
+
+            var signedPublicKeyDownload = response.getBody();
 
             var writeToPath = absolutePublicKeyPath.resolveSibling(signedPublicKeyDownload.filename());
             Files.writeString(writeToPath, signedPublicKeyDownload.signedKey());
 
             log.info("Key is signed and placed at - " + signedPublicKeyDownload.filename());
         } else {
-            log.error("Error processing request");
-            log.error(response.getStatusCode()
-                    .getClass());
+            log.error("Error processing request - {}", response.getStatusCode()
+                    .toString());
         }
     }
 

@@ -11,20 +11,23 @@
       do not share the secret key in public
     */
     const clientSecret = 'UTRtYkyYN1nbgdPPbBru1FDVsE8ye5JE';
+    const testUserNames = ["user", "binarycodes"]
 
-    const users = [{
-        username: "user",
-        firstName: "John",
-        lastName: "Doe",
-        email: "user@example.com",
-        emailVerified: true,
-        enabled: true,
-        credentials: [{
-            type: "password",
-            value: "user",
-            temporary: false
-        }]
-    }];
+    const users = testUserNames.map(user=> {
+        return {
+            username: user,
+            firstName: `Firstname ${user}`,
+            lastName: `Lastname ${user}`,
+            email: `${user}@example.com`,
+            emailVerified: true,
+            enabled: true,
+            credentials: [{
+                type: "password",
+                value: `${user}`,
+                temporary: false
+            }]
+        };
+    })
 
     /* wrapped in a function because we may need to generate access token more than once during the setup process */
     const fetchToken = async () => {
@@ -72,7 +75,10 @@
             const createRealmResponse = await fetch(`${keycloakBaseUrl}/admin/realms`, {
                 method: "POST",
                 headers: await authorization_header(),
-                body: JSON.stringify({ realm: realmName, enabled: true })
+                body: JSON.stringify({
+                    realm: realmName,
+                    enabled: true
+                })
             });
 
             if (createRealmResponse.ok) {
