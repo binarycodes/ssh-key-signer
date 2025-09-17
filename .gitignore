@@ -1,5 +1,6 @@
 .idea
 *.iml
+*.log
 **/target/
 **/node_modules/
 **/*ca_key*
