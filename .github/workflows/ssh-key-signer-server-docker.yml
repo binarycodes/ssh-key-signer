@@ -24,7 +24,7 @@ jobs:
     steps:
       - name: "display sha"
         run: |
-          echo "found sha ${{ inputs.sha }}"  
+          echo "found sha ${{ inputs.sha }}"
 
       - uses: actions/checkout@v4
         with:
@@ -53,6 +53,12 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: extract docker metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -69,7 +75,7 @@ jobs:
         with:
           context: ${{ env.PROJECT }}
           push: true
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
