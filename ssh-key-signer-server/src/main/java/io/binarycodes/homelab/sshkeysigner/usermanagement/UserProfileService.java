@@ -1,14 +1,15 @@
 package io.binarycodes.homelab.sshkeysigner.usermanagement;
 
-import com.vaadin.hilla.BrowserCallable;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import jakarta.annotation.security.PermitAll;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import com.vaadin.hilla.BrowserCallable;
 
 @BrowserCallable
 public class UserProfileService {
@@ -16,7 +17,7 @@ public class UserProfileService {
     @PermitAll
     @NonNull
     public UserProfile getUserProfile() {
-        Authentication auth = SecurityContextHolder.getContext()
+        final Authentication auth = SecurityContextHolder.getContext()
                 .getAuthentication();
 
         final List<String> authorities = auth.getAuthorities().stream()

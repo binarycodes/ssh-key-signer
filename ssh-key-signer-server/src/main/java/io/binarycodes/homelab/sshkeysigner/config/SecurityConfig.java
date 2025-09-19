@@ -1,48 +1,88 @@
 package io.binarycodes.homelab.sshkeysigner.config;
 
+import java.util.Collection;
 
-import com.vaadin.flow.spring.security.VaadinWebSecurity;
-import com.vaadin.hilla.route.RouteUtil;
+import org.jspecify.annotations.NonNull;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.web.SecurityFilterChain;
+
+import com.vaadin.flow.spring.security.VaadinAwareSecurityContextHolderStrategyConfiguration;
+import com.vaadin.flow.spring.security.VaadinSecurityConfigurer;
+import com.vaadin.hilla.route.RouteUtil;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-public class SecurityConfig extends VaadinWebSecurity {
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+public class SecurityConfig {
 
     private final RouteUtil routeUtil;
 
-    public SecurityConfig(RouteUtil routeUtil) {
+    public SecurityConfig(final RouteUtil routeUtil) {
         this.routeUtil = routeUtil;
     }
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests(registry -> {
-            registry.requestMatchers(routeUtil::isRouteAllowed)
-                    .authenticated();
-        });
-        http.oauth2ResourceServer(resourceServerConfigurer -> resourceServerConfigurer.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
-        super.configure(http);
-
-        http.csrf(config -> {
-            config.ignoringRequestMatchers("/rest/key/**");
-        });
-
-        http.oauth2Login(Customizer.withDefaults());
+    @Bean
+    SecurityFilterChain securityFilterChain(final HttpSecurity http) throws Exception {
+        return http.authorizeHttpRequests(registry -> {
+                    registry.requestMatchers(routeUtil::isRouteAllowed)
+                            .authenticated();
+                })
+                .oauth2Login(Customizer.withDefaults())
+                .oauth2ResourceServer(resourceServerConfigurer -> resourceServerConfigurer.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
+                .csrf(config -> {
+                    config.ignoringRequestMatchers("/rest/key/**");
+                })
+                .with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+                })
+                .build();
     }
 
     @Bean
-    public JwtAuthenticationConverter jwtAuthenticationConverter() {
-        final var converter = new JwtAuthenticationConverter();
-        converter.setPrincipalClaimName("preferred_username");
-        return converter;
+    public Converter<Jwt, AbstractAuthenticationToken> jwtAuthenticationConverter() {
+        return new Converter<>() {
+            private static final String PREFERRED_USERNAME_CLAIM_NAME = "preferred_username";
+            private static final String CLIENT_ID_CLAIM_NAME = "client_id";
+            private static final String SUBJECT_CLAIM_NAME = "sub";
+
+            private final Converter<Jwt, Collection<GrantedAuthority>> jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+
+            @Override
+            public AbstractAuthenticationToken convert(@NonNull final Jwt jwt) {
+                final var authorities = this.jwtGrantedAuthoritiesConverter.convert(jwt);
+                final var principalClaimValue = extractPrincipalClaimValue(jwt);
+                return new JwtAuthenticationToken(jwt, authorities, principalClaimValue);
+            }
+
+            private String extractPrincipalClaimValue(@NonNull final Jwt jwt) {
+                final var clientId = jwt.getClaimAsString(CLIENT_ID_CLAIM_NAME);
+                final var preferredUsername = jwt.getClaimAsString(PREFERRED_USERNAME_CLAIM_NAME);
+                final var sub = jwt.getClaimAsString(SUBJECT_CLAIM_NAME);
+
+                if (clientId != null && (preferredUsername == null || ("service-account-" + clientId).equals(preferredUsername))) {
+                    return clientId; // client credentials -> use client_id
+                }
+
+                if (preferredUsername != null) {
+                    // user flows -> use preferred_username when present, else fall back
+                    return preferredUsername;
+                }
+
+                return sub;
+            }
+        };
     }
 
 }

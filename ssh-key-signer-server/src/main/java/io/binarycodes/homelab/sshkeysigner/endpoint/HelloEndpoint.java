@@ -1,13 +1,14 @@
 package io.binarycodes.homelab.sshkeysigner.endpoint;
 
-import com.vaadin.hilla.BrowserCallable;
 import jakarta.annotation.security.PermitAll;
+
+import com.vaadin.hilla.BrowserCallable;
 
 @BrowserCallable
 @PermitAll
 public class HelloEndpoint {
 
-    public String sayHello(String name) {
+    public String sayHello(final String name) {
         if (name.isEmpty()) {
             return "Hello stranger";
         } else {
