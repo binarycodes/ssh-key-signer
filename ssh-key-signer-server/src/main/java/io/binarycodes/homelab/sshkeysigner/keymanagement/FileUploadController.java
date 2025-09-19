@@ -15,7 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class FileUploadController {
 
     @PostMapping("/file")
-    public ResponseEntity<ByteArrayResource> upload(@RequestParam("file") MultipartFile multipartFile) {
+    public ResponseEntity<ByteArrayResource> upload(@RequestParam("file") final MultipartFile multipartFile) {
         log.debug("Uploading file '" + multipartFile.getOriginalFilename() + "'");
         return ResponseEntity.ok()
                 .build();
