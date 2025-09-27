@@ -41,6 +41,10 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
+          cache: true
+          cache-dependency-path: |
+            ${{ inputs.service }}/go.sum
+            ${{ inputs.service }}/go.mod
 
       - name: test
         run: make test
