@@ -71,8 +71,8 @@ func Execute() {
 
 func init() {
 	// global/persistent (available to all subcommands)
-	rootCmd.PersistentFlags().String("config", "", "path to config file (default: /etc/app.conf)")
-	rootCmd.PersistentFlags().Uint64("duration", 0, "duration in seconds (optional)")
+	rootCmd.PersistentFlags().StringP("config", "c", "", "path to config file")
+	rootCmd.PersistentFlags().Uint64P("duration", "d", 0, "duration in seconds (optional)")
 
 	rootCmd.PersistentFlags().String("ca-server-url", "", "CA server URL (required for host)")
 	rootCmd.PersistentFlags().String("client-id", "", "OIDC client ID (required for host)")

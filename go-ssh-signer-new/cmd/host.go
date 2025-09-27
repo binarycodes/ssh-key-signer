@@ -54,8 +54,8 @@ func init() {
 		},
 	}
 
-	hostCmd.Flags().String("key", "", "path to public key file (required)")
-	hostCmd.Flags().StringSlice("principal", nil, "space-separated principal names (required)")
+	hostCmd.Flags().StringP("key", "k", "", "path to public key file (required)")
+	hostCmd.Flags().StringSliceP("principal", "p", nil, "space-separated principal names (required)")
 
 	_ = viper.BindPFlag("host.key", hostCmd.Flags().Lookup("key"))
 	_ = viper.BindPFlag("host.principal", hostCmd.Flags().Lookup("principal"))

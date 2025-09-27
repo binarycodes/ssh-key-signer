@@ -45,8 +45,8 @@ func init() {
 		},
 	}
 
-	userCmd.Flags().String("key", "", "path to public key file (required)")
-	userCmd.Flags().StringSlice("principal", nil, "comma-separated principal names (required)")
+	userCmd.Flags().StringP("key", "k", "", "path to public key file (required)")
+	userCmd.Flags().StringSliceP("principal", "p", nil, "comma-separated principal names (required)")
 
 	_ = viper.BindPFlag("user.key", userCmd.Flags().Lookup("key"))
 	_ = viper.BindPFlag("user.principal", userCmd.Flags().Lookup("principal"))
