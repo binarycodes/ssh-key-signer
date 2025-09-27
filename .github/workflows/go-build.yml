@@ -6,9 +6,6 @@ on:
       service:
         required: true
         type: string
-      artifact:
-        required: true
-        type: string
       artifactVersion:
         required: true
         type: string
@@ -46,11 +43,15 @@ jobs:
         run: make test
 
       - name: build
-        run: make build VERSION="${{ inputs.artifactVersion }}" GO_VERSION="${{ matrix.go-version }}"
+        run: make build VERSION="${{ inputs.artifactVersion }}"
+
+      - name: get artifact name
+        id: artifact-name
+        run: echo "name=$(make getname VERSION=${{ inputs.artifactVersion }})" >> $GITHUB_OUTPUT
 
       - name: upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.artifact }}-${{ matrix.go-version }}
-          path: ${{ inputs.service}}/bin/${{ inputs.artifact }}*
+          name: ${{ steps.artifact-name.outputs.name }}
+          path: ${{ inputs.service}}/bin/${{ steps.artifact-name.outputs.name }}
           retention-days: 5

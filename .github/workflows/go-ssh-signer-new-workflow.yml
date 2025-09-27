@@ -1,4 +1,4 @@
-name: go-ssh-signer
+name: go-ssh-signer-new
 
 on:
   push:
@@ -23,5 +23,4 @@ jobs:
     uses: ./.github/workflows/go-build.yml
     with:
       service: go-ssh-signer-new
-      artifact: ssh-keysign-new
       artifactVersion: ${{ needs.set-version.outputs.short_sha }}

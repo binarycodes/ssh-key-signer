@@ -17,9 +17,9 @@ LDFLAGS := -X '$(PKG)/internal/meta.Version=$(VERSION)' \
            -X '$(PKG)/internal/meta.OS=$(GO_OS)' \
            -X '$(PKG)/internal/meta.Arch=$(GO_ARCH)'
 
-.PHONY: all build clean run lint fmt tidy test cover
+.PHONY: all build clean run lint fmt tidy test cover getname
 
-all: build
+all: fmt lint test build
 
 tidy:
 	go mod tidy
@@ -46,3 +46,6 @@ test:
 cover:
 	go test -cover -coverprofile=coverage.out $(MAIN_PACKAGE_PATH)/...
 	go tool cover -html=coverage.out
+
+getname:
+	@echo $(BINARY_NAME)

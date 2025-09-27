@@ -1,12 +1,14 @@
 name: go-ssh-signer
 
 on:
-  push:
-    branches: [ '*' ]
-    paths:
-      - go-ssh-signer/**
-      - .github/workflows/go-ssh-signer-workflow.yml
-      - .github/workflows/go-build.yml
+  workflow_dispatch:
+# on:
+#   push:
+#     branches: [ '*' ]
+#     paths:
+#       - go-ssh-signer/**
+#       - .github/workflows/go-ssh-signer-workflow.yml
+#       - .github/workflows/go-build.yml
 
 jobs:
   set-version:
