@@ -1,7 +1,6 @@
 package constants
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -15,11 +14,9 @@ const (
 )
 
 func DefaultDurationForHostKey() uint64 {
-	fmt.Println("for host")
 	return uint64((defaultDurationForHostKeyInDays * day).Seconds())
 }
 
 func DefaultDurationForUserKey() uint64 {
-	fmt.Println("for user")
 	return uint64((defaultDurationForUserKeyInMinutes * time.Minute).Seconds())
 }
