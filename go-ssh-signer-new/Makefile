@@ -1,11 +1,21 @@
 APP_NAME := ssh-keysign
-MAIN_PACKAGE_PATH = .
+MAIN_PACKAGE_PATH := .
 BUILD_DIR := bin
 GOFILES := $(shell find . -type f -name '*.go')
-VERSION ?= $(shell git describe --always --long --dirty)
+VERSION ?= $(shell git describe --tags --always --dirty)
 GO_VERSION ?= $(shell go list -m -f '{{.GoVersion}}')
 GO_OS ?= $(shell go env GOOS)
 GO_ARCH ?= $(shell go env GOARCH)
+COMMIT := $(shell git rev-parse --short HEAD)
+BUILD_DATE := $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
+PKG := $(shell go list -m)
+BINARY_NAME :='$(APP_NAME)-$(GO_OS)-$(GO_ARCH)-$(GO_VERSION)'
+
+LDFLAGS := -X '$(PKG)/internal/meta.Version=$(VERSION)' \
+           -X '$(PKG)/internal/meta.Commit=$(COMMIT)' \
+           -X '$(PKG)/internal/meta.Date=$(BUILD_DATE)' \
+           -X '$(PKG)/internal/meta.OS=$(GO_OS)' \
+           -X '$(PKG)/internal/meta.Arch=$(GO_ARCH)'
 
 .PHONY: all build clean run lint fmt tidy test cover
 
@@ -16,10 +26,10 @@ tidy:
 
 build: tidy $(GOFILES)
 	@mkdir -p $(BUILD_DIR)
-	go build -o $(BUILD_DIR)/$(APP_NAME)-$(GO_OS)-$(GO_ARCH)-$(GO_VERSION) $(MAIN_PACKAGE_PATH)
+	go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_NAME) $(MAIN_PACKAGE_PATH)
 
 run: build
-	$(BUILD_DIR)/$(APP_NAME)-$(GO_OS)-$(GO_ARCH)-$(GO_VERSION)
+	$(BUILD_DIR)/$(BINARY_NAME)
 
 fmt:
 	go fmt  $(MAIN_PACKAGE_PATH)/...

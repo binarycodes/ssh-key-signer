@@ -46,7 +46,7 @@ jobs:
         run: make test
 
       - name: build
-        run: make build VERSION="${{ inputs.artifactVersion }}" GO_VERSION="-${{ matrix.go-version }}"
+        run: make build VERSION="${{ inputs.artifactVersion }}" GO_VERSION="${{ matrix.go-version }}"
 
       - name: upload build artifact
         uses: actions/upload-artifact@v4
