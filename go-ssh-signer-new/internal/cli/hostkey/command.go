@@ -1,9 +1,9 @@
 package hostkey
 
 import (
-	"binarycodes/ssh-keysign/internal/app"
 	"binarycodes/ssh-keysign/internal/cli"
 	"binarycodes/ssh-keysign/internal/constants"
+	"binarycodes/ssh-keysign/internal/errors"
 	"fmt"
 	"strings"
 
@@ -25,11 +25,11 @@ func NewCommand() *cobra.Command {
 			principal := viper.GetStringSlice("host.principal")
 
 			if key == "" {
-				return app.ErrUsage("--key is required for host", cmd.Help)
+				return errors.ErrUsage("--key is required for host", cmd.Help)
 			}
 
 			if len(principal) == 0 {
-				return app.ErrUsage("--principal is required for host", cmd.Help)
+				return errors.ErrUsage("--principal is required for host", cmd.Help)
 			}
 
 			caServerURL := viper.GetString("ca_server_url")
@@ -44,7 +44,7 @@ func NewCommand() *cobra.Command {
 			)
 			if len(missing) > 0 {
 				errorMessage := fmt.Sprintf("host: missing required settings: %s", strings.Join(missing, ", "))
-				return app.ErrUsage(errorMessage, cmd.Help)
+				return errors.ErrUsage(errorMessage, cmd.Help)
 			}
 
 			durationSeconds := viper.GetUint64("duration")

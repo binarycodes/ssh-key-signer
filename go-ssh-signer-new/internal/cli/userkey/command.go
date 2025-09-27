@@ -1,9 +1,9 @@
 package userkey
 
 import (
-	"binarycodes/ssh-keysign/internal/app"
 	"binarycodes/ssh-keysign/internal/cli"
 	"binarycodes/ssh-keysign/internal/constants"
+	"binarycodes/ssh-keysign/internal/errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -24,11 +24,11 @@ func NewCommand() *cobra.Command {
 			principals := viper.GetStringSlice("user.principal")
 
 			if key == "" {
-				return app.ErrUsage("--key is required for user", cmd.Help)
+				return errors.ErrUsage("--key is required for user", cmd.Help)
 			}
 
 			if len(principals) == 0 {
-				return app.ErrUsage("--principal is required for user", cmd.Help)
+				return errors.ErrUsage("--principal is required for user", cmd.Help)
 			}
 
 			durationSeconds := viper.GetUint64("duration")
