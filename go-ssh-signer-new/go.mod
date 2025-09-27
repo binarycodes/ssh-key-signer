@@ -1,4 +1,4 @@
-module example.com/app
+module binarycodes/ssh-keysign
 
 go 1.22
 

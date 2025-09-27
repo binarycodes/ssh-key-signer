@@ -1,5 +1,5 @@
 package main
 
-import "example.com/app/cmd"
+import "binarycodes/ssh-keysign/cmd"
 
 func main() { cmd.Execute() }

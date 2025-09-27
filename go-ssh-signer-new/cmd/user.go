@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"binarycodes/ssh-keysign/internal/app"
 	"fmt"
 	"os"
 
@@ -18,10 +19,11 @@ func init() {
 			principals := viper.GetStringSlice("user.principal")
 
 			if key == "" {
-				return fmt.Errorf("--key is required for user")
+				return app.ErrUsage("--key is required for user", cmd.Help)
 			}
+
 			if len(principals) == 0 {
-				return fmt.Errorf("--principal is required for user")
+				return app.ErrUsage("--principal is required for user", cmd.Help)
 			}
 
 			// Optional shared stuff

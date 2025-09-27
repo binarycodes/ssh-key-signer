@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"binarycodes/ssh-keysign/internal/app"
 	"fmt"
 	"os"
 	"strings"
@@ -18,10 +19,11 @@ func init() {
 			principal := viper.GetStringSlice("host.principal")
 
 			if key == "" {
-				return fmt.Errorf("--key is required for host")
+				return app.ErrUsage("--key is required for host", cmd.Help)
 			}
+
 			if len(principal) == 0 {
-				return fmt.Errorf("--principal is required for host")
+				return app.ErrUsage("--principal is required for host", cmd.Help)
 			}
 
 			// Mandatory for host (from flags or config)

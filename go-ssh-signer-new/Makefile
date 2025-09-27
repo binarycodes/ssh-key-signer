@@ -1,4 +1,4 @@
-APP_NAME := app
+APP_NAME := ssh-keysign
 BUILD_DIR := bin
 GOFILES := $(shell find . -type f -name '*.go')
 
@@ -30,4 +30,3 @@ lint:
 ## Clean build artifacts
 clean:
 	rm -rf $(BUILD_DIR)
-

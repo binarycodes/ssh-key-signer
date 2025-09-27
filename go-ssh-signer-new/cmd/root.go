@@ -1,9 +1,12 @@
 package cmd
 
 import (
+	"binarycodes/ssh-keysign/internal/app"
+	"binarycodes/ssh-keysign/internal/constants"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -11,8 +14,8 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "app",
-	Short: "app CLI",
+	Use:   constants.AppName,
+	Short: "ssh key certificate generator - get ssh keys signed by the configured CA server",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		// Config precedence: flags > env > file > defaults.
 		cfgFile, _ := cmd.Flags().GetString("config")
@@ -23,17 +26,18 @@ var rootCmd = &cobra.Command{
 			switch cmd.Name() {
 			case "user":
 				if runtimeDir := os.Getenv("XDG_RUNTIME_DIR"); runtimeDir != "" {
-					viper.SetConfigFile(filepath.Join(runtimeDir, "app", "config.conf"))
+					viper.SetConfigFile(filepath.Join(runtimeDir, constants.AppName, constants.ConfigFileName))
 				} else if home, err := os.UserHomeDir(); err == nil && home != "" {
-					viper.SetConfigFile(filepath.Join(home, ".config", "app", "config.conf"))
+					viper.SetConfigFile(filepath.Join(home, ".config", constants.AppName, constants.ConfigFileName))
 				}
 			case "host":
-				viper.SetConfigFile("/etc/app.conf")
+				configPath := filepath.Join("/etc", constants.AppName, constants.ConfigFileName)
+				viper.SetConfigFile(configPath)
 			}
 			viper.SetConfigType("yaml")
 		}
 
-		viper.SetEnvPrefix("APP")
+		viper.SetEnvPrefix(strings.ToUpper(constants.AppName))
 		viper.AutomaticEnv()
 
 		// Missing config file is OK.
@@ -47,7 +51,20 @@ var rootCmd = &cobra.Command{
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+
+		if kind := app.KindOf(err); kind != app.KUnknown {
+
+			if helpMethod := app.HelpFor(err); helpMethod != nil {
+				helpMethod()
+				fmt.Fprintln(os.Stderr)
+			}
+
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(kind.ExitCode())
+		} else {
+			fmt.Fprintln(os.Stderr, err)
+		}
+
 		os.Exit(1)
 	}
 }
