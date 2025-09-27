@@ -24,6 +24,9 @@ jobs:
           - '1.23'
           - '1.24'
           - '1.25'
+      include:
+        - go-version: '1.25'
+          upload: true
     defaults:
       run:
         working-directory: ./${{ inputs.service }}
@@ -46,10 +49,12 @@ jobs:
         run: make build VERSION="${{ inputs.artifactVersion }}"
 
       - name: get artifact name
+        if: matrix.upload
         id: artifact-name
         run: echo "name=$(make getname VERSION=${{ inputs.artifactVersion }})" >> $GITHUB_OUTPUT
 
       - name: upload build artifact
+        if: matrix.upload
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.artifact-name.outputs.name }}

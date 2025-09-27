@@ -3,19 +3,20 @@ MAIN_PACKAGE_PATH := .
 BUILD_DIR := bin
 GOFILES := $(shell find . -type f -name '*.go')
 VERSION ?= $(shell git describe --tags --always --dirty)
-GO_VERSION ?= $(shell go env GOVERSION | { read v _; echo ${v#go}; })
+GO_VERSION ?= $(shell go version | awk '{print $$3}')
 GO_OS ?= $(shell go env GOOS)
 GO_ARCH ?= $(shell go env GOARCH)
 COMMIT := $(shell git rev-parse --short HEAD)
 BUILD_DATE := $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 PKG := $(shell go list -m)
-BINARY_NAME :='$(APP_NAME)-$(GO_OS)-$(GO_ARCH)-$(GO_VERSION)'
+BINARY_NAME :='$(APP_NAME)-$(GO_OS)-$(GO_ARCH)'
 
 LDFLAGS := -X '$(PKG)/internal/meta.Version=$(VERSION)' \
            -X '$(PKG)/internal/meta.Commit=$(COMMIT)' \
            -X '$(PKG)/internal/meta.Date=$(BUILD_DATE)' \
            -X '$(PKG)/internal/meta.OS=$(GO_OS)' \
-           -X '$(PKG)/internal/meta.Arch=$(GO_ARCH)'
+           -X '$(PKG)/internal/meta.Arch=$(GO_ARCH)' \
+           -X '$(PKG)/internal/meta.GoVersion=$(GO_VERSION)'
 
 .PHONY: all build clean run lint fmt tidy test cover getname
 
