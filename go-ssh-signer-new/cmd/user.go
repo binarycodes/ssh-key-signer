@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"binarycodes/ssh-keysign/internal/app"
+	"binarycodes/ssh-keysign/internal/constants"
 	"fmt"
 	"os"
 
@@ -14,8 +15,10 @@ func init() {
 		Use:   "user",
 		Short: "Sign user SSH key and generate user ssh certificate",
 		Args:  cobra.NoArgs,
+		PreRun: func(cmd *cobra.Command, args []string) {
+			viper.SetDefault("duration", constants.DefaultDurationForUserKey())
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// Resolve values (flag/env/config)
 			key := viper.GetString("user.key")
 			principals := viper.GetStringSlice("user.principal")
 
@@ -27,16 +30,17 @@ func init() {
 				return app.ErrUsage("--principal is required for user", cmd.Help)
 			}
 
-			// Optional shared stuff
-			dur := viper.GetUint64("duration")
-			caURL := viper.GetString("ca_server_url") // optional for user
-			clID := viper.GetString("client_id")
-			clSecret := viper.GetString("client_secret")
-			tURL := viper.GetString("token_url")
+			durationSeconds := viper.GetUint64("duration")
+			caServerURL := viper.GetString("ca_server_url")
+			clientID := viper.GetString("client_id")
+			clientSecret := viper.GetString("client_secret")
+			tokenURL := viper.GetString("token_url")
 
-			_ = clSecret // keeps the declaration, compiler sees it as used
-			// TODO: implement real logic; for now, just echo resolved inputs.
-			fmt.Fprintf(os.Stdout, "[user] key=%s principal=%q duration=%d ca=%s client_id=%s token_url=%s\n", key, principals, dur, caURL, clID, tURL)
+			_ = clientSecret // keeps the declaration, compiler sees it as used
+
+			// TODO: implement real logic
+			fmt.Fprintf(os.Stdout, "[user] key=%s principal=%q duration=%d ca=%s client_id=%s token_url=%s\n", key, principals, durationSeconds, caServerURL, clientID, tokenURL)
+
 			return nil
 		},
 	}
@@ -44,7 +48,6 @@ func init() {
 	userCmd.Flags().String("key", "", "path to public key file (required)")
 	userCmd.Flags().StringSlice("principal", nil, "comma-separated principal names (required)")
 
-	// Optional: bind per-command keys to viper namespaced entries
 	_ = viper.BindPFlag("user.key", userCmd.Flags().Lookup("key"))
 	_ = viper.BindPFlag("user.principal", userCmd.Flags().Lookup("principal"))
 

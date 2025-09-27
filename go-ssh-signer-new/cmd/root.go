@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -19,9 +18,9 @@ var rootCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		// Config precedence: flags > env > file > defaults.
-		cfgFile, _ := cmd.Flags().GetString("config")
-		if cfgFile != "" {
-			viper.SetConfigFile(cfgFile)
+		configFilePath, _ := cmd.Flags().GetString("config")
+		if configFilePath != "" {
+			viper.SetConfigFile(configFilePath)
 			viper.SetConfigType("yaml")
 		} else {
 			switch cmd.Name() {
@@ -86,7 +85,4 @@ func init() {
 	_ = viper.BindPFlag("client_id", rootCmd.PersistentFlags().Lookup("client-id"))
 	_ = viper.BindPFlag("client_secret", rootCmd.PersistentFlags().Lookup("client-secret"))
 	_ = viper.BindPFlag("token_url", rootCmd.PersistentFlags().Lookup("token-url"))
-
-	// sane default examples (optional)
-	viper.SetDefault("duration", uint64((30 * time.Minute).Seconds()))
 }

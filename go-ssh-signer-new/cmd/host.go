@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"binarycodes/ssh-keysign/internal/app"
+	"binarycodes/ssh-keysign/internal/constants"
 	"fmt"
 	"os"
 	"strings"
@@ -15,6 +16,9 @@ func init() {
 		Use:   "host",
 		Short: "Sign host SSH key and generate host ssh certificate",
 		Args:  cobra.NoArgs,
+		PreRun: func(cmd *cobra.Command, args []string) {
+			viper.SetDefault("duration", constants.DefaultDurationForHostKey())
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := viper.GetString("host.key")
 			principal := viper.GetStringSlice("host.principal")
@@ -27,26 +31,25 @@ func init() {
 				return app.ErrUsage("--principal is required for host", cmd.Help)
 			}
 
-			// Mandatory for host (from flags or config)
-			caURL := viper.GetString("ca_server_url")
-			clID := viper.GetString("client_id")
-			clSecret := viper.GetString("client_secret")
-			tURL := viper.GetString("token_url")
+			caServerURL := viper.GetString("ca_server_url")
+			clientID := viper.GetString("client_id")
+			clientSecret := viper.GetString("client_secret")
+			tokenURL := viper.GetString("token_url")
 			missing := missingKeys(
-				keyReq{"--ca-server-url", caURL},
-				keyReq{"--client-id", clID},
-				keyReq{"--client-secret", clSecret},
-				keyReq{"--token-url", tURL},
+				keyRequired{"--ca-server-url", caServerURL},
+				keyRequired{"--client-id", clientID},
+				keyRequired{"--client-secret", clientSecret},
+				keyRequired{"--token-url", tokenURL},
 			)
 			if len(missing) > 0 {
 				errorMessage := fmt.Sprintf("host: missing required settings: %s", strings.Join(missing, ", "))
 				return app.ErrUsage(errorMessage, cmd.Help)
 			}
 
-			dur := viper.GetUint64("duration")
+			durationSeconds := viper.GetUint64("duration")
 
-			// TODO: implement real logic; for now, echo resolved inputs.
-			fmt.Fprintf(os.Stdout, "[host] key=%s principal=%q duration=%d ca=%s client_id=%s token_url=%s\n", key, principal, dur, caURL, clID, tURL)
+			// TODO: implement real logic
+			fmt.Fprintf(os.Stdout, "[host] key=%s principal=%q duration=%d ca=%s client_id=%s token_url=%s\n", key, principal, durationSeconds, caServerURL, clientID, tokenURL)
 			return nil
 		},
 	}
@@ -60,14 +63,14 @@ func init() {
 	rootCmd.AddCommand(hostCmd)
 }
 
-type keyReq struct{ name, val string }
+type keyRequired struct{ name, val string }
 
-func missingKeys(reqs ...keyReq) []string {
-	var m []string
-	for _, r := range reqs {
-		if strings.TrimSpace(r.val) == "" {
-			m = append(m, r.name)
+func missingKeys(keysReq ...keyRequired) []string {
+	var missingRequiredKeys []string
+	for _, rkey := range keysReq {
+		if strings.TrimSpace(rkey.val) == "" {
+			missingRequiredKeys = append(missingRequiredKeys, rkey.name)
 		}
 	}
-	return m
+	return missingRequiredKeys
 }
