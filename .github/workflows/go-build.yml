@@ -24,9 +24,9 @@ jobs:
           - '1.23'
           - '1.24'
           - '1.25'
-      include:
-        - go-version: '1.25'
-          upload: true
+        include:
+          - go-version: '1.25'
+            upload: true
     defaults:
       run:
         working-directory: ./${{ inputs.service }}
