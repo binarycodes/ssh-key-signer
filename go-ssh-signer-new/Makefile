@@ -2,7 +2,7 @@ APP_NAME := ssh-keysign
 BUILD_DIR := bin
 GOFILES := $(shell find . -type f -name '*.go')
 
-.PHONY: all build clean run lint fmt tidy
+.PHONY: all build clean run lint fmt tidy test cover
 
 all: build
 
@@ -30,3 +30,10 @@ lint:
 ## Clean build artifacts
 clean:
 	rm -rf $(BUILD_DIR)
+
+test:
+	go test -v ./...
+
+cover:
+	go test -cover -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out

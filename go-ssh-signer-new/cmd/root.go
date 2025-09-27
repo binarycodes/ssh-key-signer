@@ -86,3 +86,8 @@ func init() {
 	_ = viper.BindPFlag("client_secret", rootCmd.PersistentFlags().Lookup("client-secret"))
 	_ = viper.BindPFlag("token_url", rootCmd.PersistentFlags().Lookup("token-url"))
 }
+
+func BuildRootCmd() *cobra.Command {
+	// Intended for tests
+	return rootCmd
+}
