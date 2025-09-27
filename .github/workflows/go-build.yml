@@ -23,11 +23,10 @@ jobs:
     strategy:
       matrix:
         go-version:
-          - '1.19' #default for debian bookworm
           - '1.22'
           - '1.23'
           - '1.24'
-          - '1.25' #latest for arch
+          - '1.25'
     defaults:
       run:
         working-directory: ./${{ inputs.service }}
