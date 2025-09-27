@@ -86,17 +86,17 @@ func Op(op string, err error) error {
 }
 
 func KindOf(err error) Kind {
-	var ae *appError
-	if errors.As(err, &ae) {
-		return ae.Type
+	var appErr *appError
+	if errors.As(err, &appErr) {
+		return appErr.Type
 	}
 	return KUnknown
 }
 
 func HelpFor(err error) HelpMethod {
-	var ae *appError
-	if errors.As(err, &ae); ae.Help != nil {
-		return ae.Help
+	var appErr *appError
+	if errors.As(err, &appErr); appErr.Help != nil {
+		return appErr.Help
 	}
 	return nil
 }
