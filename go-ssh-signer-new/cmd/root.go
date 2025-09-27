@@ -2,6 +2,9 @@ package cmd
 
 import (
 	"binarycodes/ssh-keysign/internal/app"
+	"binarycodes/ssh-keysign/internal/cli/hostkey"
+	"binarycodes/ssh-keysign/internal/cli/userkey"
+	"binarycodes/ssh-keysign/internal/cli/version"
 	"binarycodes/ssh-keysign/internal/constants"
 	"fmt"
 	"os"
@@ -38,7 +41,9 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.AddCommand(newVersionCmd())
+	rootCmd.AddCommand(version.NewCommand())
+	rootCmd.AddCommand(hostkey.NewCommand())
+	rootCmd.AddCommand(userkey.NewCommand())
 }
 
 func BuildRootCmd() *cobra.Command {

@@ -1,17 +1,17 @@
-package cmd
+package hostkey
 
 import (
 	"binarycodes/ssh-keysign/internal/app"
+	"binarycodes/ssh-keysign/internal/cli"
 	"binarycodes/ssh-keysign/internal/constants"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-func init() {
+func NewCommand() *cobra.Command {
 	hostCmd := &cobra.Command{
 		Use:   "host",
 		Short: "Sign host SSH key and generate host ssh certificate",
@@ -50,7 +50,7 @@ func init() {
 			durationSeconds := viper.GetUint64("duration")
 
 			// TODO: implement real logic
-			fmt.Fprintf(os.Stdout, "[host] key=%s principal=%q duration=%d ca=%s client_id=%s token_url=%s\n", key, principal, durationSeconds, caServerURL, clientID, tokenURL)
+			fmt.Fprintf(cmd.OutOrStdout(), "[host] key=%s principal=%q duration=%d ca=%s client_id=%s token_url=%s\n", key, principal, durationSeconds, caServerURL, clientID, tokenURL)
 			return nil
 		},
 	}
@@ -61,9 +61,9 @@ func init() {
 	_ = viper.BindPFlag("host.key", hostCmd.Flags().Lookup("key"))
 	_ = viper.BindPFlag("host.principal", hostCmd.Flags().Lookup("principal"))
 
-	wireCommonFlags(hostCmd)
+	cli.WireCommonFlags(hostCmd)
 
-	rootCmd.AddCommand(hostCmd)
+	return hostCmd
 }
 
 type keyRequired struct{ name, val string }

@@ -1,4 +1,4 @@
-package cmd
+package version
 
 import (
 	"binarycodes/ssh-keysign/internal/meta"
@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newVersionCmd() *cobra.Command {
+func NewCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "version",
 		Short: "Print version",

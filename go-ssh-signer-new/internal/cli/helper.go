@@ -1,4 +1,4 @@
-package cmd
+package cli
 
 import (
 	"binarycodes/ssh-keysign/internal/constants"
@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func wireCommonFlags(c *cobra.Command) {
+func WireCommonFlags(c *cobra.Command) {
 	c.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		// Config precedence: flags > env > file > defaults.
 		configFilePath, _ := cmd.Flags().GetString("config")

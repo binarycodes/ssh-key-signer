@@ -1,16 +1,16 @@
-package cmd
+package userkey
 
 import (
 	"binarycodes/ssh-keysign/internal/app"
+	"binarycodes/ssh-keysign/internal/cli"
 	"binarycodes/ssh-keysign/internal/constants"
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-func init() {
+func NewCommand() *cobra.Command {
 	userCmd := &cobra.Command{
 		Use:   "user",
 		Short: "Sign user SSH key and generate user ssh certificate",
@@ -40,7 +40,7 @@ func init() {
 			_ = clientSecret // keeps the declaration, compiler sees it as used
 
 			// TODO: implement real logic
-			fmt.Fprintf(os.Stdout, "[user] key=%s principal=%q duration=%d ca=%s client_id=%s token_url=%s\n", key, principals, durationSeconds, caServerURL, clientID, tokenURL)
+			fmt.Fprintf(cmd.OutOrStdout(), "[user] key=%s principal=%q duration=%d ca=%s client_id=%s token_url=%s\n", key, principals, durationSeconds, caServerURL, clientID, tokenURL)
 
 			return nil
 		},
@@ -52,7 +52,7 @@ func init() {
 	_ = viper.BindPFlag("user.key", userCmd.Flags().Lookup("key"))
 	_ = viper.BindPFlag("user.principal", userCmd.Flags().Lookup("principal"))
 
-	wireCommonFlags(userCmd)
+	cli.WireCommonFlags(userCmd)
 
-	rootCmd.AddCommand(userCmd)
+	return userCmd
 }
