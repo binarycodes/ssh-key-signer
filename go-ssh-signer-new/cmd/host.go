@@ -15,6 +15,7 @@ func init() {
 	hostCmd := &cobra.Command{
 		Use:   "host",
 		Short: "Sign host SSH key and generate host ssh certificate",
+		Long:  "Required (may come from flag, config, or env): --ca-server-url, --client-id, --client-secret, --token-url, --key, --principal",
 		Args:  cobra.NoArgs,
 		PreRun: func(cmd *cobra.Command, args []string) {
 			viper.SetDefault("duration", constants.DefaultDurationForHostKey())

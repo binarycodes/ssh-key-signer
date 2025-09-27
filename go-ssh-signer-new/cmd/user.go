@@ -14,6 +14,7 @@ func init() {
 	userCmd := &cobra.Command{
 		Use:   "user",
 		Short: "Sign user SSH key and generate user ssh certificate",
+		Long:  "Required (may come from flag, config, or env): --key, --principal",
 		Args:  cobra.NoArgs,
 		PreRun: func(cmd *cobra.Command, args []string) {
 			viper.SetDefault("duration", constants.DefaultDurationForUserKey())
