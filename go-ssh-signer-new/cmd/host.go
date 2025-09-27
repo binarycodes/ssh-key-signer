@@ -13,7 +13,7 @@ import (
 func init() {
 	hostCmd := &cobra.Command{
 		Use:   "host",
-		Short: "Host flow",
+		Short: "Sign host SSH key and generate host ssh certificate",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := viper.GetString("host.key")
 			principal := viper.GetStringSlice("host.principal")
@@ -38,7 +38,8 @@ func init() {
 				keyReq{"--token-url", tURL},
 			)
 			if len(missing) > 0 {
-				return fmt.Errorf("host: missing required settings: %s", strings.Join(missing, ", "))
+				errorMessage := fmt.Sprintf("host: missing required settings: %s", strings.Join(missing, ", "))
+				return app.ErrUsage(errorMessage, cmd.Help)
 			}
 
 			dur := viper.GetUint64("duration")

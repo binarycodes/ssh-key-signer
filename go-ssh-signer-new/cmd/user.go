@@ -12,7 +12,7 @@ import (
 func init() {
 	userCmd := &cobra.Command{
 		Use:   "user",
-		Short: "User flow",
+		Short: "Sign user SSH key and generate user ssh certificate",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Resolve values (flag/env/config)
 			key := viper.GetString("user.key")
