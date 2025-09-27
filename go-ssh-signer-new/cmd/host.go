@@ -14,6 +14,7 @@ func init() {
 	hostCmd := &cobra.Command{
 		Use:   "host",
 		Short: "Sign host SSH key and generate host ssh certificate",
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := viper.GetString("host.key")
 			principal := viper.GetStringSlice("host.principal")

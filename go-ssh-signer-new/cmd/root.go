@@ -16,6 +16,7 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   constants.AppName,
 	Short: "ssh key certificate generator - get ssh keys signed by the configured CA server",
+	Args:  cobra.NoArgs,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		// Config precedence: flags > env > file > defaults.
 		cfgFile, _ := cmd.Flags().GetString("config")
