@@ -1,4 +1,4 @@
-package sshkeysign
+package main
 
 import "binarycodes/ssh-keysign/cmd"
 
