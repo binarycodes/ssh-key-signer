@@ -1,7 +1,7 @@
-package hostkey_test
+package hostcmd_test
 
 import (
-	"binarycodes/ssh-keysign/internal/cli/hostkey"
+	"binarycodes/ssh-keysign/internal/cli/hostcmd"
 	"binarycodes/ssh-keysign/internal/cli/testutil"
 	"os"
 	"path/filepath"
@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestHostkey_MissingKeyFails(t *testing.T) {
-	cmd := hostkey.NewCommand()
+func TestHostCmd_MissingKeyFails(t *testing.T) {
+	cmd := hostcmd.NewCommand()
 	stdout, stderr, err := testutil.ExecuteCommand(cmd)
 
 	require.Error(t, err)
@@ -20,8 +20,8 @@ func TestHostkey_MissingKeyFails(t *testing.T) {
 	require.Contains(t, stderr, "Error:")
 }
 
-func TestHostkey_MissingOIDCFails(t *testing.T) {
-	cmd := hostkey.NewCommand()
+func TestHostCmd_MissingOIDCFails(t *testing.T) {
+	cmd := hostcmd.NewCommand()
 	stdout, stderr, err := testutil.ExecuteCommand(cmd,
 		"--key", "/tmp/id.pub",
 		"--principal", "web",
@@ -33,8 +33,8 @@ func TestHostkey_MissingOIDCFails(t *testing.T) {
 	require.Contains(t, stderr, "Error:")
 }
 
-func TestHostkey_WithKeySucceeds(t *testing.T) {
-	cmd := hostkey.NewCommand()
+func TestHostCmd_WithKeySucceeds(t *testing.T) {
+	cmd := hostcmd.NewCommand()
 	stdout, stderr, err := testutil.ExecuteCommand(cmd,
 		"--key", "/tmp/id.pub",
 		"--principal", "web",
@@ -49,7 +49,7 @@ func TestHostkey_WithKeySucceeds(t *testing.T) {
 	require.Empty(t, stderr)
 }
 
-func TestHostkey_BadConfigFails(t *testing.T) {
+func TestHostCmd_BadConfigFails(t *testing.T) {
 	tmp := t.TempDir()
 	cfgPath := filepath.Join(tmp, "bad.yml")
 
@@ -58,7 +58,7 @@ func TestHostkey_BadConfigFails(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cmd := hostkey.NewCommand()
+	cmd := hostcmd.NewCommand()
 	stdout, stderr, err := testutil.ExecuteCommand(cmd, "--config", cfgPath)
 
 	require.Error(t, err)
@@ -67,7 +67,7 @@ func TestHostkey_BadConfigFails(t *testing.T) {
 	require.Contains(t, stderr, "Error:")
 }
 
-func TestHostkey_WithValidConfigSucceeds(t *testing.T) {
+func TestHostCmd_WithValidConfigSucceeds(t *testing.T) {
 	tmp := t.TempDir()
 	cfgPath := filepath.Join(tmp, "good.yml")
 
@@ -85,7 +85,7 @@ token-url: "https://idp.example.test/token"
 		t.Fatal(err)
 	}
 
-	cmd := hostkey.NewCommand()
+	cmd := hostcmd.NewCommand()
 	stdout, stderr, err := testutil.ExecuteCommand(cmd, "--config", cfgPath)
 
 	require.NoError(t, err)
@@ -101,7 +101,7 @@ token-url: "https://idp.example.test/token"
 	require.Empty(t, stderr)
 }
 
-func TestHostkey_Precedence_ConfigEnvFlag(t *testing.T) {
+func TestHostCmd_Precedence_ConfigEnvFlag(t *testing.T) {
 	tmp := t.TempDir()
 	cfgPath := filepath.Join(tmp, "config.yml")
 
@@ -123,7 +123,7 @@ token_url: "https://idp.from.config/token"
 	t.Setenv("SSH_KEYSIGN_CLIENT_ID", "id_from_env")
 	t.Setenv("SSH_KEYSIGN_CLIENT_SECRET", "secret_from_env")
 
-	cmd := hostkey.NewCommand()
+	cmd := hostcmd.NewCommand()
 	stdout, _, err := testutil.ExecuteCommand(cmd,
 		"--config", cfgPath,
 		"--key", "/from/flag.pub",

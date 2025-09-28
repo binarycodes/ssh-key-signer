@@ -1,11 +1,11 @@
-package userkey
+package usercmd
 
 import (
 	"binarycodes/ssh-keysign/internal/cli"
 	"binarycodes/ssh-keysign/internal/constants"
 	"binarycodes/ssh-keysign/internal/ctxkeys"
 	"binarycodes/ssh-keysign/internal/model"
-	core "binarycodes/ssh-keysign/internal/userkey"
+	"binarycodes/ssh-keysign/internal/usersvc"
 
 	"github.com/spf13/cobra"
 )
@@ -36,7 +36,7 @@ func NewCommand() *cobra.Command {
 				TokenURL:   v.GetString("token-url"),
 			}
 
-			if err := core.Run(cmd.Context(), cmd.OutOrStdout(), cmd.Help, opts); err != nil {
+			if err := usersvc.Run(cmd.Context(), cmd.OutOrStdout(), cmd.Help, opts); err != nil {
 				return err
 			}
 

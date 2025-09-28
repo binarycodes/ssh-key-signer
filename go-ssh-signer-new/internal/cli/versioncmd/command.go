@@ -1,4 +1,4 @@
-package version
+package versioncmd
 
 import (
 	"binarycodes/ssh-keysign/internal/meta"

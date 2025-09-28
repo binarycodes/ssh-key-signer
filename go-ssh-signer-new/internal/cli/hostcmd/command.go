@@ -1,10 +1,10 @@
-package hostkey
+package hostcmd
 
 import (
 	"binarycodes/ssh-keysign/internal/cli"
 	"binarycodes/ssh-keysign/internal/constants"
 	"binarycodes/ssh-keysign/internal/ctxkeys"
-	core "binarycodes/ssh-keysign/internal/hostkey"
+	"binarycodes/ssh-keysign/internal/hostsvc"
 	"binarycodes/ssh-keysign/internal/model"
 
 	"github.com/spf13/cobra"
@@ -37,7 +37,7 @@ func NewCommand() *cobra.Command {
 				TokenURL:   v.GetString("token-url"),
 			}
 
-			if err := core.Run(cmd.Context(), cmd.OutOrStdout(), cmd.Help, opts); err != nil {
+			if err := hostsvc.Run(cmd.Context(), cmd.OutOrStdout(), cmd.Help, opts); err != nil {
 				return err
 			}
 
