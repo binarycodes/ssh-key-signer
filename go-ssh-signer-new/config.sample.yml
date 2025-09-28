@@ -2,10 +2,10 @@
 duration: 3600
 
 # optional for user, mandatory for host
-ca_server_url: "https://ca.example.test"
-client_id: "example-client-id"
-client_secret: "example-client-secret"
-token_url: "https://idp.example.test/oauth/token"
+ca-server-url: "https://ca.example.test"
+client-id: "example-client-id"
+client-secret: "example-client-secret"
+token-url: "https://idp.example.test/oauth/token"
 
 # per-command convenience (either can be supplied via flags)
 user:

@@ -3,12 +3,11 @@ package hostkey
 import (
 	"binarycodes/ssh-keysign/internal/cli"
 	"binarycodes/ssh-keysign/internal/constants"
-	"binarycodes/ssh-keysign/internal/errors"
-	"fmt"
-	"strings"
+	"binarycodes/ssh-keysign/internal/ctxkeys"
+	core "binarycodes/ssh-keysign/internal/hostkey"
+	"binarycodes/ssh-keysign/internal/model"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 func NewCommand() *cobra.Command {
@@ -17,40 +16,31 @@ func NewCommand() *cobra.Command {
 		Short: "Sign host SSH key and generate host ssh certificate",
 		Long:  "Required (may come from flag, config, or env): --ca-server-url, --client-id, --client-secret, --token-url, --key, --principal",
 		Args:  cobra.NoArgs,
-		PreRun: func(cmd *cobra.Command, args []string) {
-			viper.SetDefault("duration", constants.DefaultDurationForHostKey())
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			v := ctxkeys.ViperFrom(cmd.Context())
+
+			v.SetDefault("duration", constants.DefaultDurationForHostKey())
+			_ = v.BindPFlag("host.key", cmd.Flags().Lookup("key"))
+			_ = v.BindPFlag("host.principal", cmd.Flags().Lookup("principal"))
+
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			key := viper.GetString("host.key")
-			principal := viper.GetStringSlice("host.principal")
-
-			if key == "" {
-				return errors.ErrUsage("--key is required for host", cmd.Help)
+			v := ctxkeys.ViperFrom(cmd.Context())
+			opts := model.Options{
+				Key:        v.GetString("host.key"),
+				Principals: v.GetStringSlice("host.principal"),
+				Duration:   v.GetUint64("duration"),
+				CAServer:   v.GetString("ca-server-url"),
+				ClientID:   v.GetString("client-id"),
+				Secret:     v.GetString("client-secret"),
+				TokenURL:   v.GetString("token-url"),
 			}
 
-			if len(principal) == 0 {
-				return errors.ErrUsage("--principal is required for host", cmd.Help)
+			if err := core.Run(cmd.Context(), cmd.OutOrStdout(), cmd.Help, opts); err != nil {
+				return err
 			}
 
-			caServerURL := viper.GetString("ca_server_url")
-			clientID := viper.GetString("client_id")
-			clientSecret := viper.GetString("client_secret")
-			tokenURL := viper.GetString("token_url")
-			missing := missingKeys(
-				keyRequired{"--ca-server-url", caServerURL},
-				keyRequired{"--client-id", clientID},
-				keyRequired{"--client-secret", clientSecret},
-				keyRequired{"--token-url", tokenURL},
-			)
-			if len(missing) > 0 {
-				errorMessage := fmt.Sprintf("host: missing required settings: %s", strings.Join(missing, ", "))
-				return errors.ErrUsage(errorMessage, cmd.Help)
-			}
-
-			durationSeconds := viper.GetUint64("duration")
-
-			// TODO: implement real logic
-			fmt.Fprintf(cmd.OutOrStdout(), "[host] key=%s principal=%q duration=%d ca=%s client_id=%s token_url=%s\n", key, principal, durationSeconds, caServerURL, clientID, tokenURL)
 			return nil
 		},
 	}
@@ -58,22 +48,7 @@ func NewCommand() *cobra.Command {
 	hostCmd.Flags().StringP("key", "k", "", "path to public key file")
 	hostCmd.Flags().StringSliceP("principal", "p", nil, "comma-separated principal names")
 
-	_ = viper.BindPFlag("host.key", hostCmd.Flags().Lookup("key"))
-	_ = viper.BindPFlag("host.principal", hostCmd.Flags().Lookup("principal"))
-
 	cli.WireCommonFlags(hostCmd)
 
 	return hostCmd
-}
-
-type keyRequired struct{ name, val string }
-
-func missingKeys(keysReq ...keyRequired) []string {
-	var missingRequiredKeys []string
-	for _, rkey := range keysReq {
-		if strings.TrimSpace(rkey.val) == "" {
-			missingRequiredKeys = append(missingRequiredKeys, rkey.name)
-		}
-	}
-	return missingRequiredKeys
 }

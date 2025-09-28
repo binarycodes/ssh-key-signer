@@ -2,6 +2,7 @@ package cli
 
 import (
 	"binarycodes/ssh-keysign/internal/constants"
+	"binarycodes/ssh-keysign/internal/ctxkeys"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,50 +12,59 @@ import (
 )
 
 func WireCommonFlags(c *cobra.Command) {
-	c.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		// Config precedence: flags > env > file > defaults.
+
+	c.Flags().StringP("config", "c", "", "path to config file")
+	c.Flags().Uint64P("duration", "d", 0, "duration in seconds")
+	c.Flags().String("ca-server-url", "", "CA server URL")
+	c.Flags().String("client-id", "", "OIDC client ID")
+	c.Flags().String("client-secret", "", "OIDC client secret")
+	c.Flags().String("token-url", "", "OIDC token URL")
+
+	prevPreRunE := c.PreRunE
+	c.PreRunE = func(cmd *cobra.Command, args []string) error {
+
+		v := viper.New()
+		_ = v.BindPFlags(cmd.Flags())
+		_ = v.BindPFlags(cmd.InheritedFlags())
+		cmd.SetContext(ctxkeys.WithViper(cmd.Context(), v))
+
+		if prevPreRunE != nil {
+			if err := prevPreRunE(cmd, args); err != nil {
+				return err
+			}
+		}
+
 		configFilePath, _ := cmd.Flags().GetString("config")
 		if configFilePath != "" {
-			viper.SetConfigFile(configFilePath)
-			viper.SetConfigType("yaml")
+			v.SetConfigFile(configFilePath)
+			v.SetConfigType("yaml")
 		} else {
 			switch cmd.Name() {
 			case "user":
 				if runtimeDir := os.Getenv("XDG_RUNTIME_DIR"); runtimeDir != "" {
-					viper.SetConfigFile(filepath.Join(runtimeDir, constants.AppName, constants.ConfigFileName))
+					v.SetConfigFile(filepath.Join(runtimeDir, constants.AppName, constants.ConfigFileName))
 				} else if home, err := os.UserHomeDir(); err == nil && home != "" {
-					viper.SetConfigFile(filepath.Join(home, ".config", constants.AppName, constants.ConfigFileName))
+					v.SetConfigFile(filepath.Join(home, ".config", constants.AppName, constants.ConfigFileName))
 				}
 			case "host":
 				configPath := filepath.Join("/etc", constants.AppName, constants.ConfigFileName)
-				viper.SetConfigFile(configPath)
+				v.SetConfigFile(configPath)
 			}
-			viper.SetConfigType("yaml")
+			v.SetConfigType("yaml")
 		}
 
-		viper.SetEnvPrefix(strings.ToUpper(constants.AppName))
-		viper.AutomaticEnv()
+		v.SetEnvPrefix(strings.ToUpper(constants.AppName))
+		v.SetEnvKeyReplacer(strings.NewReplacer("-", "_", ".", "_"))
+		v.AutomaticEnv()
 
-		// Missing config file is OK.
-		_ = viper.ReadInConfig()
+		_ = v.ReadInConfig()
+		// if err := v.ReadInConfig(); err != nil {
+		// 	if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+		// 		return apperror.ErrFileSystem(fmt.Errorf("failed to read config: %w", err));
+		// 	}
+		// }
 
 		return nil
 	}
-
-	// global/persistent (available to all subcommands)
-	c.PersistentFlags().StringP("config", "c", "", "path to config file")
-	c.PersistentFlags().Uint64P("duration", "d", 0, "duration in seconds")
-
-	c.PersistentFlags().String("ca-server-url", "", "CA server URL")
-	c.PersistentFlags().String("client-id", "", "OIDC client ID")
-	c.PersistentFlags().String("client-secret", "", "OIDC client secret")
-	c.PersistentFlags().String("token-url", "", "OIDC token URL")
-
-	// Bind once; values resolved at read time.
-	_ = viper.BindPFlag("duration", c.PersistentFlags().Lookup("duration"))
-	_ = viper.BindPFlag("ca_server_url", c.PersistentFlags().Lookup("ca-server-url"))
-	_ = viper.BindPFlag("client_id", c.PersistentFlags().Lookup("client-id"))
-	_ = viper.BindPFlag("client_secret", c.PersistentFlags().Lookup("client-secret"))
-	_ = viper.BindPFlag("token_url", c.PersistentFlags().Lookup("token-url"))
 
 }

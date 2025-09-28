@@ -1,11 +1,12 @@
 package cmd
 
 import (
+	"binarycodes/ssh-keysign/internal/apperror"
 	"binarycodes/ssh-keysign/internal/cli/hostkey"
 	"binarycodes/ssh-keysign/internal/cli/userkey"
 	"binarycodes/ssh-keysign/internal/cli/version"
 	"binarycodes/ssh-keysign/internal/constants"
-	"binarycodes/ssh-keysign/internal/errors"
+
 	"fmt"
 	"os"
 
@@ -23,9 +24,9 @@ var rootCmd = &cobra.Command{
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 
-		if kind := errors.KindOf(err); kind != errors.KUnknown {
+		if kind := apperror.KindOf(err); kind != apperror.KUnknown {
 
-			if helpMethod := errors.HelpFor(err); helpMethod != nil {
+			if helpMethod := apperror.HelpFor(err); helpMethod != nil {
 				helpMethod()
 				fmt.Fprintln(os.Stderr)
 			}

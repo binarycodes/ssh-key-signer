@@ -1,4 +1,4 @@
-package errors
+package apperror
 
 import (
 	"context"
@@ -70,7 +70,7 @@ func ErrNet(err error) error {
 	return &appError{Type: KNetwork, OpError: err}
 }
 
-func ErrFS(err error) error {
+func ErrFileSystem(err error) error {
 	return &appError{Type: KFileSystem, OpError: err}
 }
 

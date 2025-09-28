@@ -3,11 +3,11 @@ package userkey
 import (
 	"binarycodes/ssh-keysign/internal/cli"
 	"binarycodes/ssh-keysign/internal/constants"
-	"binarycodes/ssh-keysign/internal/errors"
-	"fmt"
+	"binarycodes/ssh-keysign/internal/ctxkeys"
+	"binarycodes/ssh-keysign/internal/model"
+	core "binarycodes/ssh-keysign/internal/userkey"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 func NewCommand() *cobra.Command {
@@ -16,31 +16,29 @@ func NewCommand() *cobra.Command {
 		Short: "Sign user SSH key and generate user ssh certificate",
 		Long:  "Required (may come from flag, config, or env): --key, --principal",
 		Args:  cobra.NoArgs,
-		PreRun: func(cmd *cobra.Command, args []string) {
-			viper.SetDefault("duration", constants.DefaultDurationForUserKey())
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			v := ctxkeys.ViperFrom(cmd.Context())
+
+			v.SetDefault("duration", constants.DefaultDurationForUserKey())
+			_ = v.BindPFlag("user.key", cmd.Flags().Lookup("key"))
+			_ = v.BindPFlag("user.principal", cmd.Flags().Lookup("principal"))
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			key := viper.GetString("user.key")
-			principals := viper.GetStringSlice("user.principal")
-
-			if key == "" {
-				return errors.ErrUsage("--key is required for user", cmd.Help)
+			v := ctxkeys.ViperFrom(cmd.Context())
+			opts := model.Options{
+				Key:        v.GetString("user.key"),
+				Principals: v.GetStringSlice("user.principal"),
+				Duration:   v.GetUint64("duration"),
+				CAServer:   v.GetString("ca-server-url"),
+				ClientID:   v.GetString("client-id"),
+				Secret:     v.GetString("client-secret"),
+				TokenURL:   v.GetString("token-url"),
 			}
 
-			if len(principals) == 0 {
-				return errors.ErrUsage("--principal is required for user", cmd.Help)
+			if err := core.Run(cmd.Context(), cmd.OutOrStdout(), cmd.Help, opts); err != nil {
+				return err
 			}
-
-			durationSeconds := viper.GetUint64("duration")
-			caServerURL := viper.GetString("ca_server_url")
-			clientID := viper.GetString("client_id")
-			clientSecret := viper.GetString("client_secret")
-			tokenURL := viper.GetString("token_url")
-
-			_ = clientSecret // keeps the declaration, compiler sees it as used
-
-			// TODO: implement real logic
-			fmt.Fprintf(cmd.OutOrStdout(), "[user] key=%s principal=%q duration=%d ca=%s client_id=%s token_url=%s\n", key, principals, durationSeconds, caServerURL, clientID, tokenURL)
 
 			return nil
 		},
@@ -48,9 +46,6 @@ func NewCommand() *cobra.Command {
 
 	userCmd.Flags().StringP("key", "k", "", "path to public key file")
 	userCmd.Flags().StringSliceP("principal", "p", nil, "comma-separated principal names")
-
-	_ = viper.BindPFlag("user.key", userCmd.Flags().Lookup("key"))
-	_ = viper.BindPFlag("user.principal", userCmd.Flags().Lookup("principal"))
 
 	cli.WireCommonFlags(userCmd)
 
