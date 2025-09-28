@@ -1,8 +1,12 @@
 package cli
 
 import (
+	"binarycodes/ssh-keysign/internal/apperror"
 	"binarycodes/ssh-keysign/internal/constants"
 	"binarycodes/ssh-keysign/internal/ctxkeys"
+	"errors"
+	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,16 +32,14 @@ func WireCommonFlags(c *cobra.Command) {
 		_ = v.BindPFlags(cmd.InheritedFlags())
 		cmd.SetContext(ctxkeys.WithViper(cmd.Context(), v))
 
-		if prevPreRunE != nil {
-			if err := prevPreRunE(cmd, args); err != nil {
-				return err
-			}
-		}
-
 		configFilePath, _ := cmd.Flags().GetString("config")
 		if configFilePath != "" {
 			v.SetConfigFile(configFilePath)
 			v.SetConfigType("yaml")
+
+			if err := v.ReadInConfig(); err != nil {
+				return apperror.ErrFileSystem(fmt.Errorf("failed to read config %q: %w", configFilePath, err))
+			}
 		} else {
 			switch cmd.Name() {
 			case "user":
@@ -51,18 +53,23 @@ func WireCommonFlags(c *cobra.Command) {
 				v.SetConfigFile(configPath)
 			}
 			v.SetConfigType("yaml")
+
+			if err := v.ReadInConfig(); err != nil {
+				if !(errors.Is(err, fs.ErrNotExist) || os.IsNotExist(err)) {
+					return apperror.ErrFileSystem(fmt.Errorf("failed to read default config: %w", err))
+				}
+			}
 		}
 
 		v.SetEnvPrefix(strings.ToUpper(constants.AppName))
 		v.SetEnvKeyReplacer(strings.NewReplacer("-", "_", ".", "_"))
 		v.AutomaticEnv()
 
-		_ = v.ReadInConfig()
-		// if err := v.ReadInConfig(); err != nil {
-		// 	if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-		// 		return apperror.ErrFileSystem(fmt.Errorf("failed to read config: %w", err));
-		// 	}
-		// }
+		if prevPreRunE != nil {
+			if err := prevPreRunE(cmd, args); err != nil {
+				return err
+			}
+		}
 
 		return nil
 	}
