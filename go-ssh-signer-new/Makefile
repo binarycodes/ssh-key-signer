@@ -33,8 +33,11 @@ build: tidy $(GOFILES)
 	if [ "$$pkgtype" != "main" ]; then \
 	  echo "❌ Build target is not package main (got $$pkgtype)"; exit 1; \
 	fi
+
 	@mkdir -p $(BUILD_DIR)
+
 	$(ENVVARS) go build $(GOFLAGS) -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_NAME) $(MAIN_PACKAGE_PATH)
+
 	@file $(BUILD_DIR)/$(BINARY_NAME) | grep -q 'executable' || \
 	(echo "❌ Build produced non-executable"; rm -f $(BUILD_DIR)/$(BINARY_NAME); exit 1)
 
@@ -51,7 +54,7 @@ clean:
 	rm -rf $(BUILD_DIR)
 
 test:
-	go test -v ./...
+	go test --race -v ./...
 
 cover:
 	go test -cover -coverprofile=coverage.out $(MAIN_PACKAGE_PATH)/...
