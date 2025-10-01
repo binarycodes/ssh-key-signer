@@ -27,11 +27,21 @@ func WireCommonFlags(c *cobra.Command) {
 	prevPreRunE := c.PreRunE
 	c.PreRunE = func(cmd *cobra.Command, args []string) error {
 		v := viper.New()
-		_ = v.BindPFlags(cmd.Flags())
-		_ = v.BindPFlags(cmd.InheritedFlags())
+
+		if err := errors.Join(
+			v.BindPFlags(cmd.Flags()),
+			v.BindPFlags(cmd.InheritedFlags()),
+		); err != nil {
+			return err
+		}
+
 		cmd.SetContext(ctxkeys.WithViper(cmd.Context(), v))
 
-		configFilePath, _ := cmd.Flags().GetString("config")
+		configFilePath, err := cmd.Flags().GetString("config")
+		if err != nil {
+			return err
+		}
+
 		if configFilePath != "" {
 			v.SetConfigFile(configFilePath)
 			v.SetConfigType("yaml")
@@ -48,7 +58,7 @@ func WireCommonFlags(c *cobra.Command) {
 					v.SetConfigFile(filepath.Join(home, ".config", constants.AppName, constants.ConfigFileName))
 				}
 			case "host":
-				configPath := filepath.Join("/etc", constants.AppName, constants.ConfigFileName)
+				configPath := filepath.Join(constants.EtcDir, constants.AppName, constants.ConfigFileName)
 				v.SetConfigFile(configPath)
 			}
 			v.SetConfigType("yaml")

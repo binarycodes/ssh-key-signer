@@ -96,7 +96,7 @@ func KindOf(err error) Kind {
 
 func HelpFor(err error) HelpMethod {
 	var appErr *appError
-	if errors.As(err, &appErr); appErr.Help != nil {
+	if errors.As(err, &appErr) && appErr.Help != nil {
 		return appErr.Help
 	}
 	return nil

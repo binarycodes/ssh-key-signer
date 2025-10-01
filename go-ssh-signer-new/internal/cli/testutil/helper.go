@@ -10,7 +10,7 @@ import (
 	"binarycodes/ssh-keysign/internal/ctxkeys"
 )
 
-func ExecuteCommand(cmd *cobra.Command, args ...string) (string, string, error) {
+func ExecuteCommand(cmd *cobra.Command, args ...string) (stoutStr, stderrStr string, err error) {
 	var stdout, stderr bytes.Buffer
 
 	v := viper.New()
@@ -20,6 +20,6 @@ func ExecuteCommand(cmd *cobra.Command, args ...string) (string, string, error) 
 	cmd.SetErr(&stderr)
 	cmd.SetArgs(args)
 
-	err := cmd.Execute()
+	err = cmd.Execute()
 	return stdout.String(), stderr.String(), err
 }

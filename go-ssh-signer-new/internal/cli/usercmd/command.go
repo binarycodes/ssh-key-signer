@@ -1,6 +1,8 @@
 package usercmd
 
 import (
+	"errors"
+
 	"github.com/spf13/cobra"
 
 	"binarycodes/ssh-keysign/internal/cli"
@@ -20,9 +22,12 @@ func NewCommand() *cobra.Command {
 			v := ctxkeys.ViperFrom(cmd.Context())
 
 			v.SetDefault("duration", constants.DefaultDurationForUserKey())
-			_ = v.BindPFlag("user.key", cmd.Flags().Lookup("key"))
-			_ = v.BindPFlag("user.principal", cmd.Flags().Lookup("principal"))
-			return nil
+
+			err := errors.Join(
+				v.BindPFlag("user.key", cmd.Flags().Lookup("key")),
+				v.BindPFlag("user.principal", cmd.Flags().Lookup("principal")),
+			)
+			return err
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			v := ctxkeys.ViperFrom(cmd.Context())
@@ -36,11 +41,8 @@ func NewCommand() *cobra.Command {
 				TokenURL:   v.GetString("token-url"),
 			}
 
-			if err := usersvc.Run(cmd.Context(), cmd.OutOrStdout(), cmd.Help, opts); err != nil {
-				return err
-			}
-
-			return nil
+			err := usersvc.Run(cmd.Context(), cmd.OutOrStdout(), cmd.Help, opts)
+			return err
 		},
 	}
 
