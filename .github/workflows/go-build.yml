@@ -27,7 +27,7 @@ jobs:
       - name: setup Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: go.mod
+          go-version-file: ${{ inputs.service }}/go.mod
           cache: true
           cache-dependency-path: |
             ${{ inputs.service }}/go.sum
@@ -52,7 +52,7 @@ jobs:
       - name: setup Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: go.mod
+          go-version-file: ${{ inputs.service }}/go.mod
           cache: true
           cache-dependency-path: |
             ${{ inputs.service }}/go.sum
