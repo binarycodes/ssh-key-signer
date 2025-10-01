@@ -13,17 +13,18 @@ import (
 
 func TestHostCmd_MissingKeyFails(t *testing.T) {
 	cmd := hostcmd.NewCommand()
-	stdout, stderr, err := testutil.ExecuteCommand(cmd)
+	stdout, stderr, logs, err := testutil.ExecuteCommand(cmd)
 
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "key and principals are required")
 	require.Contains(t, stdout, "Usage:")
 	require.Contains(t, stderr, "Error:")
+	require.Empty(t, logs)
 }
 
 func TestHostCmd_MissingOIDCFails(t *testing.T) {
 	cmd := hostcmd.NewCommand()
-	stdout, stderr, err := testutil.ExecuteCommand(cmd,
+	stdout, stderr, logs, err := testutil.ExecuteCommand(cmd,
 		"--key", "/tmp/id.pub",
 		"--principal", "web",
 	)
@@ -32,11 +33,12 @@ func TestHostCmd_MissingOIDCFails(t *testing.T) {
 	require.Contains(t, err.Error(), "ca-server-url, client-id, client-secret, token-url required")
 	require.Contains(t, stdout, "Usage:")
 	require.Contains(t, stderr, "Error:")
+	require.Empty(t, logs)
 }
 
 func TestHostCmd_WithKeySucceeds(t *testing.T) {
 	cmd := hostcmd.NewCommand()
-	stdout, stderr, err := testutil.ExecuteCommand(cmd,
+	stdout, stderr, logs, err := testutil.ExecuteCommand(cmd,
 		"--key", "/tmp/id.pub",
 		"--principal", "web",
 		"--ca-server-url", "http://localhost:8888",
@@ -46,8 +48,10 @@ func TestHostCmd_WithKeySucceeds(t *testing.T) {
 	)
 
 	require.NoError(t, err)
-	require.Contains(t, stdout, "duration=31536000")
+	require.Contains(t, stdout, "[host] ok")
 	require.Empty(t, stderr)
+	testutil.LogContains(t, logs[0], "duration", "31536000")
+	require.Equal(t, logs[0].Message, "host run")
 }
 
 func TestHostCmd_BadConfigFails(t *testing.T) {
@@ -60,12 +64,13 @@ func TestHostCmd_BadConfigFails(t *testing.T) {
 	}
 
 	cmd := hostcmd.NewCommand()
-	stdout, stderr, err := testutil.ExecuteCommand(cmd, "--config", cfgPath)
+	stdout, stderr, logs, err := testutil.ExecuteCommand(cmd, "--config", cfgPath)
 
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "failed to read config")
 	require.Contains(t, stdout, "Usage:")
 	require.Contains(t, stderr, "Error:")
+	require.Empty(t, logs)
 }
 
 func TestHostCmd_WithValidConfigSucceeds(t *testing.T) {
@@ -87,19 +92,28 @@ token-url: "https://idp.example.test/token"
 	}
 
 	cmd := hostcmd.NewCommand()
-	stdout, stderr, err := testutil.ExecuteCommand(cmd, "--config", cfgPath)
+	stdout, stderr, logs, err := testutil.ExecuteCommand(cmd, "--config", cfgPath)
 
 	require.NoError(t, err)
-	require.Contains(t, stdout, "[host]")
-	require.Contains(t, stdout, "/tmp/id.pub")
-	require.Contains(t, stdout, "web")
-	require.Contains(t, stdout, "https://ca.example.test")
-	require.Contains(t, stdout, "client")
-	require.Contains(t, stdout, "https://idp.example.test/token")
-	require.Contains(t, stdout, "3153600")
+	require.Contains(t, stdout, "[host] ok")
+	require.Empty(t, stderr)
+
+	testutil.LogContains(t, logs[0], "key", "/tmp/id.pub")
+	testutil.LogContains(t, logs[0], "principal", "[web]")
+	testutil.LogContains(t, logs[0], "ca-server-url", "https://ca.example.test")
+	testutil.LogContains(t, logs[0], "client-id", "client")
+	testutil.LogContains(t, logs[0], "token-url", "https://idp.example.test/token")
+	testutil.LogContains(t, logs[0], "duration", "31536000")
 
 	require.NotContains(t, stdout, "secret")
+	testutil.LogNotContains(t, logs[0], "client-secret")
+
+	for i := range logs {
+		testutil.LogNotContainsValue(t, logs[i], "secret")
+	}
+
 	require.Empty(t, stderr)
+	require.Equal(t, logs[0].Message, "host run")
 }
 
 func TestHostCmd_Precedence_ConfigEnvFlag(t *testing.T) {
@@ -125,7 +139,7 @@ token_url: "https://idp.from.config/token"
 	t.Setenv("SSH_KEYSIGN_CLIENT_SECRET", "secret_from_env")
 
 	cmd := hostcmd.NewCommand()
-	stdout, _, err := testutil.ExecuteCommand(cmd,
+	stdout, stderr, logs, err := testutil.ExecuteCommand(cmd,
 		"--config", cfgPath,
 		"--key", "/from/flag.pub",
 		"--principal", "flag_principal",
@@ -134,10 +148,22 @@ token_url: "https://idp.from.config/token"
 	)
 
 	require.NoError(t, err)
-	require.Contains(t, stdout, "/from/flag.pub")        // flag > env > config
-	require.Contains(t, stdout, "flag_principal")        // flag > config
-	require.Contains(t, stdout, "id_from_env")           // env > config
-	require.NotContains(t, stdout, "secret_from_env")    // secret should not be exposed
-	require.Contains(t, stdout, "https://ca.from.flag")  // flag > config
-	require.Contains(t, stdout, "https://idp.from.flag") // flag > config
+	require.Contains(t, stdout, "[host] ok")
+
+	testutil.LogContains(t, logs[0], "key", "/from/flag.pub")
+	testutil.LogContains(t, logs[0], "principal", "[flag_principal]")
+	testutil.LogContains(t, logs[0], "ca-server-url", "https://ca.from.flag")
+	testutil.LogContains(t, logs[0], "client-id", "id_from_env")
+	testutil.LogContains(t, logs[0], "token-url", "https://idp.from.flag/token")
+	testutil.LogContains(t, logs[0], "duration", "31536000")
+
+	require.NotContains(t, stdout, "secret_from_env")
+	testutil.LogNotContains(t, logs[0], "client-secret")
+
+	for i := range logs {
+		testutil.LogNotContainsValue(t, logs[i], "secret_from_env")
+	}
+
+	require.Empty(t, stderr)
+	require.Equal(t, logs[0].Message, "host run")
 }

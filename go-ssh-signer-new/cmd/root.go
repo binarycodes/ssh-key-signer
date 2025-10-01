@@ -1,16 +1,24 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
+	"log"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"go.uber.org/zap"
 
 	"binarycodes/ssh-keysign/internal/apperror"
 	"binarycodes/ssh-keysign/internal/cli/hostcmd"
 	"binarycodes/ssh-keysign/internal/cli/usercmd"
 	"binarycodes/ssh-keysign/internal/cli/versioncmd"
 	"binarycodes/ssh-keysign/internal/constants"
+	"binarycodes/ssh-keysign/internal/ctxkeys"
+	"binarycodes/ssh-keysign/internal/logging"
+	"binarycodes/ssh-keysign/internal/meta"
 )
 
 var rootCmd = &cobra.Command{
@@ -19,34 +27,84 @@ var rootCmd = &cobra.Command{
 	Args:          cobra.NoArgs,
 	SilenceUsage:  true,
 	SilenceErrors: true,
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		v := viper.New()
+		cmd.SetContext(ctxkeys.WithViper(cmd.Context(), v))
+
+		v.SetEnvPrefix(strings.ToUpper(constants.AppName))
+		v.SetEnvKeyReplacer(strings.NewReplacer("-", "_", ".", "_"))
+		v.AutomaticEnv()
+
+		if err := errors.Join(
+			v.BindPFlags(cmd.Flags()),
+			v.BindPFlags(cmd.PersistentFlags()),
+			v.BindPFlags(cmd.InheritedFlags()),
+		); err != nil {
+			return err
+		}
+
+		logLevel, lErr := logging.ParseLogLevel(v.GetString("log-level"))
+		logDest, dErr := logging.ParseLogDestination(v.GetString("log-dest"))
+
+		if err := errors.Join(lErr, dErr); err != nil {
+			return err
+		}
+
+		zl, cleanup, err := logging.Build(logging.Options{
+			Level: logLevel, Destination: logDest, Sample: true,
+		})
+		if err != nil {
+			return err
+		}
+
+		zl = zl.With(
+			zap.String("command", cmd.CommandPath()),
+			zap.String("version", meta.Version),
+		)
+
+		cmd.SetContext(ctxkeys.WithLogger(cmd.Context(), zl))
+		cmd.SetContext(ctxkeys.WithLogCleanup(cmd.Context(), cleanup))
+
+		return nil
+	},
 }
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 
-		if kind := apperror.KindOf(err); kind != apperror.KUnknown {
-
-			if helpMethod := apperror.HelpFor(err); helpMethod != nil {
-				if err := helpMethod(); err != nil {
-					os.Exit(apperror.KUnknown.ExitCode())
-				}
-				_, _ = fmt.Fprintln(rootCmd.ErrOrStderr())
-			}
-
-			_, _ = fmt.Fprintln(rootCmd.ErrOrStderr(), err)
-			os.Exit(kind.ExitCode())
-		} else {
-			_, _ = fmt.Fprintln(rootCmd.ErrOrStderr(), err)
+		// Find which command was triggered
+		args := os.Args[1:]
+		cmd, _, findErr := rootCmd.Find(args)
+		if findErr != nil {
+			log.Fatal(err)
 		}
 
-		os.Exit(apperror.KUnknown.ExitCode())
+		kind := apperror.KindOf(err)
+		if kind == apperror.KUnknown {
+			log.Fatal(err)
+		}
+
+		if kind == apperror.KUsage {
+			if err := cmd.Help(); err != nil {
+				log.Fatal(err)
+			}
+			_, _ = fmt.Fprintln(rootCmd.ErrOrStderr())
+		}
+
+		_, _ = fmt.Fprintln(rootCmd.ErrOrStderr(), err)
+		os.Exit(kind.ExitCode())
 	}
 }
 
-func init() {
+func InitRoot() error {
 	rootCmd.AddCommand(versioncmd.NewCommand())
 	rootCmd.AddCommand(hostcmd.NewCommand())
 	rootCmd.AddCommand(usercmd.NewCommand())
+
+	rootCmd.PersistentFlags().String("log-level", "warn", "info level: error|warn|info|debug")
+	rootCmd.PersistentFlags().String("log-dest", "stderr", "log destination: stderr|stdout|file")
+
+	return nil
 }
 
 func BuildRootCmd() *cobra.Command {

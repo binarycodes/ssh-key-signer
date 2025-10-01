@@ -5,19 +5,32 @@ import (
 	"fmt"
 	"io"
 
+	"go.uber.org/zap"
+
 	"binarycodes/ssh-keysign/internal/apperror"
+	"binarycodes/ssh-keysign/internal/ctxkeys"
 	"binarycodes/ssh-keysign/internal/model"
 )
 
-func Run(ctx context.Context, out io.Writer, help apperror.HelpMethod, o model.Options) error {
-	if err := o.ValidateForUser(help); err != nil {
+func Run(ctx context.Context, out io.Writer, help apperror.HelpMethod, opts model.Options) error {
+	log := ctxkeys.LoggerFrom(ctx)
+
+	if err := opts.ValidateForUser(help); err != nil {
 		return err
 	}
 
+	log.Info("user run",
+		zap.String("key", opts.Key),
+		zap.Strings("principal", opts.Principals),
+		zap.Uint64("duration", opts.Duration),
+		zap.String("ca-server-url", opts.CAServer),
+		zap.String("client-id", opts.ClientID),
+		zap.String("token-url", opts.TokenURL),
+	)
+
+	_, _ = fmt.Fprintln(out, "[user] ok")
+
 	// TODO: implement:
-	_, _ = fmt.Fprintf(out,
-		"[user] key=%s principal=%q duration=%d ca=%s client_id=%s token_url=%s\n",
-		o.Key, o.Principals, o.Duration, o.CAServer, o.ClientID, o.TokenURL)
 	// 1) read public key at o.Key
 	// 2) request token using o.ClientID/o.Secret against o.TokenURL
 	// 3) call o.CAServer to sign host cert with principals + duration

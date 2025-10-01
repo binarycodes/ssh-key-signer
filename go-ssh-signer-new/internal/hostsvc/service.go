@@ -5,19 +5,30 @@ import (
 	"fmt"
 	"io"
 
+	"go.uber.org/zap"
+
 	"binarycodes/ssh-keysign/internal/apperror"
+	"binarycodes/ssh-keysign/internal/ctxkeys"
 	"binarycodes/ssh-keysign/internal/model"
 )
 
-func Run(ctx context.Context, out io.Writer, help apperror.HelpMethod, o model.Options) error {
-	if err := o.ValidateForHost(help); err != nil {
+func Run(ctx context.Context, out io.Writer, help apperror.HelpMethod, opts model.Options) error {
+	log := ctxkeys.LoggerFrom(ctx)
+
+	if err := opts.ValidateForHost(help); err != nil {
 		return err
 	}
 
-	// TODO: implement real logic
-	_, _ = fmt.Fprintf(out,
-		"[host] key=%s principal=%q duration=%d ca=%s client_id=%s token_url=%s\n",
-		o.Key, o.Principals, o.Duration, o.CAServer, o.ClientID, o.TokenURL)
+	log.Info("host run",
+		zap.String("key", opts.Key),
+		zap.Strings("principal", opts.Principals),
+		zap.Uint64("duration", opts.Duration),
+		zap.String("ca-server-url", opts.CAServer),
+		zap.String("client-id", opts.ClientID),
+		zap.String("token-url", opts.TokenURL),
+	)
+
+	_, _ = fmt.Fprintln(out, "[host] ok")
 
 	// TODO: implement:
 	// 1) read public key at o.Key
