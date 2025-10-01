@@ -1,12 +1,13 @@
 package testutil
 
 import (
-	"binarycodes/ssh-keysign/internal/ctxkeys"
 	"bytes"
 	"context"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"binarycodes/ssh-keysign/internal/ctxkeys"
 )
 
 func ExecuteCommand(cmd *cobra.Command, args ...string) (string, string, error) {

@@ -1,9 +1,6 @@
 package cli
 
 import (
-	"binarycodes/ssh-keysign/internal/apperror"
-	"binarycodes/ssh-keysign/internal/constants"
-	"binarycodes/ssh-keysign/internal/ctxkeys"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -13,10 +10,13 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"binarycodes/ssh-keysign/internal/apperror"
+	"binarycodes/ssh-keysign/internal/constants"
+	"binarycodes/ssh-keysign/internal/ctxkeys"
 )
 
 func WireCommonFlags(c *cobra.Command) {
-
 	c.Flags().StringP("config", "c", "", "path to config file")
 	c.Flags().Uint64P("duration", "d", 0, "duration in seconds")
 	c.Flags().String("ca-server-url", "", "CA server URL")
@@ -26,7 +26,6 @@ func WireCommonFlags(c *cobra.Command) {
 
 	prevPreRunE := c.PreRunE
 	c.PreRunE = func(cmd *cobra.Command, args []string) error {
-
 		v := viper.New()
 		_ = v.BindPFlags(cmd.Flags())
 		_ = v.BindPFlags(cmd.InheritedFlags())
@@ -73,5 +72,4 @@ func WireCommonFlags(c *cobra.Command) {
 
 		return nil
 	}
-
 }

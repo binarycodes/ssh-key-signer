@@ -1,11 +1,12 @@
 package cmd_test
 
 import (
-	"binarycodes/ssh-keysign/cmd"
 	"testing"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	"binarycodes/ssh-keysign/cmd"
 )
 
 func TestUniqueShortFlags(t *testing.T) {

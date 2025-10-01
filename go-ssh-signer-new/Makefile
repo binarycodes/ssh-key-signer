@@ -46,6 +46,7 @@ run: build
 
 fmt:
 	go fmt ./...
+	golangci-lint fmt
 
 lint:
 	golangci-lint run

@@ -1,16 +1,16 @@
 package cmd
 
 import (
+	"fmt"
+	"os"
+
+	"github.com/spf13/cobra"
+
 	"binarycodes/ssh-keysign/internal/apperror"
 	"binarycodes/ssh-keysign/internal/cli/hostcmd"
 	"binarycodes/ssh-keysign/internal/cli/usercmd"
 	"binarycodes/ssh-keysign/internal/cli/versioncmd"
 	"binarycodes/ssh-keysign/internal/constants"
-
-	"fmt"
-	"os"
-
-	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{

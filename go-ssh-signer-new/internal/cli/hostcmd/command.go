@@ -1,13 +1,13 @@
 package hostcmd
 
 import (
+	"github.com/spf13/cobra"
+
 	"binarycodes/ssh-keysign/internal/cli"
 	"binarycodes/ssh-keysign/internal/constants"
 	"binarycodes/ssh-keysign/internal/ctxkeys"
 	"binarycodes/ssh-keysign/internal/hostsvc"
 	"binarycodes/ssh-keysign/internal/model"
-
-	"github.com/spf13/cobra"
 )
 
 func NewCommand() *cobra.Command {

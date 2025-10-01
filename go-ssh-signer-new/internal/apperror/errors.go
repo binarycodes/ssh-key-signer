@@ -5,8 +5,10 @@ import (
 	"errors"
 )
 
-type Kind int
-type HelpMethod func() error
+type (
+	Kind       int
+	HelpMethod func() error
+)
 
 const (
 	KUnknown    Kind = iota

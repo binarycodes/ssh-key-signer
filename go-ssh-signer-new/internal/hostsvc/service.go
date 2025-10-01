@@ -1,11 +1,12 @@
 package hostsvc
 
 import (
-	"binarycodes/ssh-keysign/internal/apperror"
-	"binarycodes/ssh-keysign/internal/model"
 	"context"
 	"fmt"
 	"io"
+
+	"binarycodes/ssh-keysign/internal/apperror"
+	"binarycodes/ssh-keysign/internal/model"
 )
 
 func Run(ctx context.Context, out io.Writer, help apperror.HelpMethod, o model.Options) error {

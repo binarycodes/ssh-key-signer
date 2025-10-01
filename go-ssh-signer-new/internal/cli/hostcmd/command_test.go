@@ -1,13 +1,14 @@
 package hostcmd_test
 
 import (
-	"binarycodes/ssh-keysign/internal/cli/hostcmd"
-	"binarycodes/ssh-keysign/internal/cli/testutil"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"binarycodes/ssh-keysign/internal/cli/hostcmd"
+	"binarycodes/ssh-keysign/internal/cli/testutil"
 )
 
 func TestHostCmd_MissingKeyFails(t *testing.T) {
@@ -54,7 +55,7 @@ func TestHostCmd_BadConfigFails(t *testing.T) {
 	cfgPath := filepath.Join(tmp, "bad.yml")
 
 	content := []byte("not: [valid\n")
-	if err := os.WriteFile(cfgPath, content, 0644); err != nil {
+	if err := os.WriteFile(cfgPath, content, 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -81,7 +82,7 @@ client-id: "client"
 client-secret: "secret"
 token-url: "https://idp.example.test/token"
 `)
-	if err := os.WriteFile(cfgPath, content, 0644); err != nil {
+	if err := os.WriteFile(cfgPath, content, 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -116,7 +117,7 @@ client_id: "id_from_config"
 client_secret: "secret_from_config"
 token_url: "https://idp.from.config/token"
 `)
-	if err := os.WriteFile(cfgPath, content, 0644); err != nil {
+	if err := os.WriteFile(cfgPath, content, 0o644); err != nil {
 		t.Fatal(err)
 	}
 

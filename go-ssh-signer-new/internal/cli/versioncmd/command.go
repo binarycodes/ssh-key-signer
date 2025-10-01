@@ -1,10 +1,11 @@
 package versioncmd
 
 import (
-	"binarycodes/ssh-keysign/internal/meta"
 	"fmt"
 
 	"github.com/spf13/cobra"
+
+	"binarycodes/ssh-keysign/internal/meta"
 )
 
 func NewCommand() *cobra.Command {
