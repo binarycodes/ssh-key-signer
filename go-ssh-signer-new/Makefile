@@ -48,7 +48,7 @@ fmt:
 	go fmt ./...
 
 lint:
-	go vet ./...
+	golangci-lint run
 
 clean:
 	rm -rf $(BUILD_DIR)
