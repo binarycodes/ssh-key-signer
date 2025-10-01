@@ -3,7 +3,6 @@ package apperror
 import (
 	"context"
 	"errors"
-	"fmt"
 )
 
 type Kind int
@@ -54,7 +53,7 @@ func (appErr *appError) Unwrap() error {
 }
 
 func ErrUsage(message string, help HelpMethod) error {
-	appErr := fmt.Errorf(message)
+	appErr := errors.New(message)
 	return &appError{Type: KUsage, OpError: appErr, Help: help}
 }
 

@@ -14,7 +14,7 @@ func Run(ctx context.Context, out io.Writer, help apperror.HelpMethod, o model.O
 	}
 
 	// TODO: implement:
-	fmt.Fprintf(out,
+	_, _ = fmt.Fprintf(out,
 		"[user] key=%s principal=%q duration=%d ca=%s client_id=%s token_url=%s\n",
 		o.Key, o.Principals, o.Duration, o.CAServer, o.ClientID, o.TokenURL)
 	// 1) read public key at o.Key

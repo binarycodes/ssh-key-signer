@@ -27,17 +27,19 @@ func Execute() {
 		if kind := apperror.KindOf(err); kind != apperror.KUnknown {
 
 			if helpMethod := apperror.HelpFor(err); helpMethod != nil {
-				helpMethod()
-				fmt.Fprintln(os.Stderr)
+				if err := helpMethod(); err != nil {
+					os.Exit(apperror.KUnknown.ExitCode())
+				}
+				_, _ = fmt.Fprintln(rootCmd.ErrOrStderr())
 			}
 
-			fmt.Fprintln(os.Stderr, err)
+			_, _ = fmt.Fprintln(rootCmd.ErrOrStderr(), err)
 			os.Exit(kind.ExitCode())
 		} else {
-			fmt.Fprintln(os.Stderr, err)
+			_, _ = fmt.Fprintln(rootCmd.ErrOrStderr(), err)
 		}
 
-		os.Exit(1)
+		os.Exit(apperror.KUnknown.ExitCode())
 	}
 }
 

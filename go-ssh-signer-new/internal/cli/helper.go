@@ -55,7 +55,7 @@ func WireCommonFlags(c *cobra.Command) {
 			v.SetConfigType("yaml")
 
 			if err := v.ReadInConfig(); err != nil {
-				if !(errors.Is(err, fs.ErrNotExist) || os.IsNotExist(err)) {
+				if !errors.Is(err, fs.ErrNotExist) {
 					return apperror.ErrFileSystem(fmt.Errorf("failed to read default config: %w", err))
 				}
 			}
