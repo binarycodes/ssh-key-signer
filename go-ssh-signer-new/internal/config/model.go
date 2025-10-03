@@ -1,4 +1,4 @@
-package model
+package config
 
 import (
 	"binarycodes/ssh-keysign/internal/apperror"

@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 
 	"binarycodes/ssh-keysign/internal/apperror"
+	"binarycodes/ssh-keysign/internal/cli"
 	"binarycodes/ssh-keysign/internal/cli/hostcmd"
 	"binarycodes/ssh-keysign/internal/cli/usercmd"
 	"binarycodes/ssh-keysign/internal/cli/versioncmd"
@@ -40,6 +41,10 @@ var rootCmd = &cobra.Command{
 			v.BindPFlags(cmd.PersistentFlags()),
 			v.BindPFlags(cmd.InheritedFlags()),
 		); err != nil {
+			return err
+		}
+
+		if err := cli.ReadConfigFile(cmd, v); err != nil {
 			return err
 		}
 

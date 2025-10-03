@@ -8,11 +8,11 @@ import (
 	"go.uber.org/zap"
 
 	"binarycodes/ssh-keysign/internal/apperror"
+	"binarycodes/ssh-keysign/internal/config"
 	"binarycodes/ssh-keysign/internal/ctxkeys"
-	"binarycodes/ssh-keysign/internal/model"
 )
 
-func Run(ctx context.Context, out io.Writer, help apperror.HelpMethod, opts model.Options) error {
+func Run(ctx context.Context, out io.Writer, help apperror.HelpMethod, opts config.Options) error {
 	log := ctxkeys.LoggerFrom(ctx)
 
 	if err := opts.ValidateForHost(help); err != nil {

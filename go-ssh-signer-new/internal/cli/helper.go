@@ -37,37 +37,8 @@ func WireCommonFlags(c *cobra.Command) {
 
 		cmd.SetContext(ctxkeys.WithViper(cmd.Context(), v))
 
-		configFilePath, err := cmd.Flags().GetString("config")
-		if err != nil {
+		if err := ReadConfigFile(cmd, v); err != nil {
 			return err
-		}
-
-		if configFilePath != "" {
-			v.SetConfigFile(configFilePath)
-			v.SetConfigType("yaml")
-
-			if err := v.ReadInConfig(); err != nil {
-				return apperror.ErrFileSystem(fmt.Errorf("failed to read config %q: %w", configFilePath, err))
-			}
-		} else {
-			switch cmd.Name() {
-			case "user":
-				if runtimeDir := os.Getenv("XDG_RUNTIME_DIR"); runtimeDir != "" {
-					v.SetConfigFile(filepath.Join(runtimeDir, constants.AppName, constants.ConfigFileName))
-				} else if home, err := os.UserHomeDir(); err == nil && home != "" {
-					v.SetConfigFile(filepath.Join(home, ".config", constants.AppName, constants.ConfigFileName))
-				}
-			case "host":
-				configPath := filepath.Join(constants.EtcDir, constants.AppName, constants.ConfigFileName)
-				v.SetConfigFile(configPath)
-			}
-			v.SetConfigType("yaml")
-
-			if err := v.ReadInConfig(); err != nil {
-				if !errors.Is(err, fs.ErrNotExist) {
-					return apperror.ErrFileSystem(fmt.Errorf("failed to read default config: %w", err))
-				}
-			}
 		}
 
 		v.SetEnvPrefix(strings.ToUpper(constants.AppName))
@@ -82,4 +53,45 @@ func WireCommonFlags(c *cobra.Command) {
 
 		return nil
 	}
+}
+
+func ReadConfigFile(cmd *cobra.Command, v *viper.Viper) error {
+	if f := cmd.Flags().Lookup("config"); f == nil {
+		return nil
+	}
+
+	configFilePath, err := cmd.Flags().GetString("config")
+	if err != nil {
+		return err
+	}
+
+	if configFilePath != "" {
+		v.SetConfigFile(configFilePath)
+		v.SetConfigType("yaml")
+
+		if err := v.ReadInConfig(); err != nil {
+			return apperror.ErrFileSystem(fmt.Errorf("failed to read config %q: %w", configFilePath, err))
+		}
+	} else {
+		switch cmd.Name() {
+		case "user":
+			if runtimeDir := os.Getenv("XDG_RUNTIME_DIR"); runtimeDir != "" {
+				v.SetConfigFile(filepath.Join(runtimeDir, constants.AppName, constants.ConfigFileName))
+			} else if home, err := os.UserHomeDir(); err == nil && home != "" {
+				v.SetConfigFile(filepath.Join(home, ".config", constants.AppName, constants.ConfigFileName))
+			}
+		case "host":
+			configPath := filepath.Join(constants.EtcDir, constants.AppName, constants.ConfigFileName)
+			v.SetConfigFile(configPath)
+		}
+		v.SetConfigType("yaml")
+
+		if err := v.ReadInConfig(); err != nil {
+			if !errors.Is(err, fs.ErrNotExist) {
+				return apperror.ErrFileSystem(fmt.Errorf("failed to read default config: %w", err))
+			}
+		}
+	}
+
+	return nil
 }

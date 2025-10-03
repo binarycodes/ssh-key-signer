@@ -6,10 +6,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"binarycodes/ssh-keysign/internal/cli"
+	"binarycodes/ssh-keysign/internal/config"
 	"binarycodes/ssh-keysign/internal/constants"
 	"binarycodes/ssh-keysign/internal/ctxkeys"
 	"binarycodes/ssh-keysign/internal/hostsvc"
-	"binarycodes/ssh-keysign/internal/model"
 )
 
 func NewCommand() *cobra.Command {
@@ -31,7 +31,7 @@ func NewCommand() *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			v := ctxkeys.ViperFrom(cmd.Context())
-			opts := model.Options{
+			opts := config.Options{
 				Key:        v.GetString("host.key"),
 				Principals: v.GetStringSlice("host.principal"),
 				Duration:   v.GetUint64("duration"),
