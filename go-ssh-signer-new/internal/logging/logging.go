@@ -27,7 +27,7 @@ const (
 	LFile   LogDestination = "file"
 )
 
-type Options struct {
+type Logging struct {
 	Level       LogLevel
 	Destination LogDestination
 	Sample      bool
@@ -70,7 +70,7 @@ func (d *LogDestination) UnmarshalText(text []byte) error {
 	return nil
 }
 
-func Build(o Options) (logger *zap.Logger, cleanup func() error, err error) {
+func Build(o Logging) (logger *zap.Logger, cleanup func() error, err error) {
 	encCfg := zap.NewProductionEncoderConfig()
 	encCfg.TimeKey = "ts"
 	encCfg.EncodeTime = zapcore.ISO8601TimeEncoder

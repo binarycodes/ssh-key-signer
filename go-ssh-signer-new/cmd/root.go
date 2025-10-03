@@ -55,7 +55,7 @@ var rootCmd = &cobra.Command{
 			return err
 		}
 
-		zl, cleanup, err := logging.Build(logging.Options{
+		zl, cleanup, err := logging.Build(logging.Logging{
 			Level: logLevel, Destination: logDest, Sample: true,
 		})
 		if err != nil {

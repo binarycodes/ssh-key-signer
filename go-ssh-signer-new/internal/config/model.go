@@ -4,6 +4,23 @@ import (
 	"binarycodes/ssh-keysign/internal/apperror"
 )
 
+type OAuth struct {
+	ServerURL    string `mapstructure:"ca-server-url"`
+	ClientID     string `mapstructure:"client-id"`
+	ClientSecret string `mapstructure:"client-secret"`
+	TokenURL     string `mapstructure:"token-url"`
+}
+
+type Host struct {
+	Key        string   `mapstructure:"host.key"`
+	Principals []string `mapstructure:"host.principal"`
+}
+
+type User struct {
+	Key        string   `mapstructure:"user.key"`
+	Principals []string `mapstructure:"user.principal"`
+}
+
 type Options struct {
 	Key        string
 	Principals []string
