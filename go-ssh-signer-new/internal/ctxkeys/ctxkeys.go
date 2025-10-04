@@ -5,12 +5,15 @@ import (
 
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+
+	"binarycodes/ssh-keysign/internal/logging"
 )
 
 type (
 	viperKey      struct{}
 	loggerKey     struct{}
 	logCleanupKey struct{}
+	printerKey    struct{}
 )
 
 func WithViper(ctx context.Context, v *viper.Viper) context.Context {
@@ -41,6 +44,17 @@ func WithLogCleanup(ctx context.Context, cleanup func() error) context.Context {
 
 func CleanupFrom(ctx context.Context) func() error {
 	if cl, ok := ctx.Value(logCleanupKey{}).(func() error); ok && cl != nil {
+		return cl
+	}
+	return nil
+}
+
+func WithPrinter(ctx context.Context, printer *logging.Printer) context.Context {
+	return context.WithValue(ctx, printerKey{}, printer)
+}
+
+func PrinterFrom(ctx context.Context) *logging.Printer {
+	if cl, ok := ctx.Value(printerKey{}).(*logging.Printer); ok && cl != nil {
 		return cl
 	}
 	return nil

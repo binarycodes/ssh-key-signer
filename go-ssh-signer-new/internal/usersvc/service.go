@@ -2,7 +2,6 @@ package usersvc
 
 import (
 	"context"
-	"fmt"
 	"io"
 
 	"go.uber.org/zap"
@@ -10,10 +9,12 @@ import (
 	"binarycodes/ssh-keysign/internal/apperror"
 	"binarycodes/ssh-keysign/internal/config"
 	"binarycodes/ssh-keysign/internal/ctxkeys"
+	"binarycodes/ssh-keysign/internal/logging"
 )
 
 func Run(ctx context.Context, out io.Writer, help apperror.HelpMethod, cfg config.Config) error {
 	log := ctxkeys.LoggerFrom(ctx)
+	p := ctxkeys.PrinterFrom(ctx)
 
 	log.Info("user run",
 		zap.String("key", cfg.User.Key),
@@ -24,7 +25,8 @@ func Run(ctx context.Context, out io.Writer, help apperror.HelpMethod, cfg confi
 		zap.String("token-url", cfg.OAuth.TokenURL),
 	)
 
-	_, _ = fmt.Fprintln(out, "[user] ok")
+	p.V(logging.VeryVerbose).Println("initiating connection to OAuth")
+	p.Println("[user] ok")
 
 	// TODO: implement:
 	// 1) read public key at o.Key

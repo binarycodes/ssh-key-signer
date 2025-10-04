@@ -13,6 +13,7 @@ import (
 	"go.uber.org/zap/zaptest/observer"
 
 	"binarycodes/ssh-keysign/internal/ctxkeys"
+	"binarycodes/ssh-keysign/internal/logging"
 )
 
 func ExecuteCommand(cmd *cobra.Command, args ...string) (stoutStr, stderrStr string, logs []observer.LoggedEntry, err error) {
@@ -26,6 +27,9 @@ func ExecuteCommand(cmd *cobra.Command, args ...string) (stoutStr, stderrStr str
 	obsCore, observed := observer.New(zap.InfoLevel)
 	logger := zap.New(obsCore)
 	ctx = ctxkeys.WithLogger(ctx, logger)
+
+	pr := logging.NewPrinter(&stdout, int(logging.Normal))
+	ctx = ctxkeys.WithPrinter(ctx, pr)
 
 	cmd.SetContext(ctx)
 	cmd.SetOut(&stdout)

@@ -67,8 +67,16 @@ var rootCmd = &cobra.Command{
 			zap.String("version", meta.Version),
 		)
 
+		verbosity, err := cmd.Flags().GetCount("verbose")
+		if err != nil {
+			return err
+		}
+
+		printer := logging.NewPrinter(cmd.OutOrStdout(), verbosity)
+
 		cmd.SetContext(ctxkeys.WithLogger(cmd.Context(), zl))
 		cmd.SetContext(ctxkeys.WithLogCleanup(cmd.Context(), cleanup))
+		cmd.SetContext(ctxkeys.WithPrinter(cmd.Context(), printer))
 
 		return nil
 	},
@@ -108,6 +116,7 @@ func InitRoot() error {
 
 	rootCmd.PersistentFlags().String("log-level", "warn", "info level: error|warn|info|debug")
 	rootCmd.PersistentFlags().String("log-dest", "stderr", "log destination: stderr|stdout|file")
+	rootCmd.PersistentFlags().CountP("verbose", "v", "Increase user output verbosity (-v, -vv, -vvv)")
 
 	return nil
 }
