@@ -1,6 +1,6 @@
 module binarycodes/ssh-keysign
 
-go 1.22
+go 1.24
 
 require (
 	github.com/mitchellh/mapstructure v1.5.0
