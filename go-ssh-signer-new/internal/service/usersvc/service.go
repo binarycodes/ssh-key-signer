@@ -2,17 +2,15 @@ package usersvc
 
 import (
 	"context"
-	"io"
 
 	"go.uber.org/zap"
 
-	"binarycodes/ssh-keysign/internal/apperror"
 	"binarycodes/ssh-keysign/internal/config"
 	"binarycodes/ssh-keysign/internal/ctxkeys"
 	"binarycodes/ssh-keysign/internal/logging"
 )
 
-func Run(ctx context.Context, out io.Writer, help apperror.HelpMethod, cfg config.Config) error {
+func Run(ctx context.Context, cfg config.Config) error {
 	log := ctxkeys.LoggerFrom(ctx)
 	p := ctxkeys.PrinterFrom(ctx)
 

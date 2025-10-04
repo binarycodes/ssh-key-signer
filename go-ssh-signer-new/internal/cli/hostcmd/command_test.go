@@ -1,6 +1,7 @@
 package hostcmd_test
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -13,7 +14,7 @@ import (
 
 func TestHostCmd_MissingKeyFails(t *testing.T) {
 	cmd := hostcmd.NewCommand()
-	stdout, stderr, logs, err := testutil.ExecuteCommand(cmd)
+	stdout, stderr, logs, err := testutil.ExecuteCommand(t, cmd)
 
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "missing required parameters")
@@ -23,9 +24,11 @@ func TestHostCmd_MissingKeyFails(t *testing.T) {
 }
 
 func TestHostCmd_MissingOIDCFails(t *testing.T) {
+	validKeyFilePath := testutil.ProjectPath(t, "testdata", "id.pub")
+
 	cmd := hostcmd.NewCommand()
-	stdout, stderr, logs, err := testutil.ExecuteCommand(cmd,
-		"--key", "/tmp/id.pub",
+	stdout, stderr, logs, err := testutil.ExecuteCommand(t, cmd,
+		"--key", validKeyFilePath,
 		"--principal", "web",
 	)
 
@@ -37,9 +40,11 @@ func TestHostCmd_MissingOIDCFails(t *testing.T) {
 }
 
 func TestHostCmd_WithKeySucceeds(t *testing.T) {
+	validKeyFilePath := testutil.ProjectPath(t, "testdata", "id.pub")
+
 	cmd := hostcmd.NewCommand()
-	stdout, stderr, logs, err := testutil.ExecuteCommand(cmd,
-		"--key", "/tmp/id.pub",
+	stdout, stderr, logs, err := testutil.ExecuteCommand(t, cmd,
+		"--key", validKeyFilePath,
 		"--principal", "web",
 		"--ca-server-url", "http://localhost:8888",
 		"--client-id", "clientId",
@@ -64,7 +69,7 @@ func TestHostCmd_BadConfigFails(t *testing.T) {
 	}
 
 	cmd := hostcmd.NewCommand()
-	stdout, stderr, logs, err := testutil.ExecuteCommand(cmd, "--config", cfgPath)
+	stdout, stderr, logs, err := testutil.ExecuteCommand(t, cmd, "--config", cfgPath)
 
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "failed to read config")
@@ -74,31 +79,33 @@ func TestHostCmd_BadConfigFails(t *testing.T) {
 }
 
 func TestHostCmd_WithValidConfigSucceeds(t *testing.T) {
+	validKeyFilePath := testutil.ProjectPath(t, "testdata", "id.pub")
+
 	tmp := t.TempDir()
 	cfgPath := filepath.Join(tmp, "good.yml")
 
-	content := []byte(`
+	content := fmt.Sprintf(`
 host:
-  key: "/tmp/id.pub"
+  key: %s
   principal:
     - web
 ca-server-url: "https://ca.example.test"
 client-id: "client"
 client-secret: "secret"
 token-url: "https://idp.example.test/token"
-`)
-	if err := os.WriteFile(cfgPath, content, 0o644); err != nil {
+`, validKeyFilePath)
+	if err := os.WriteFile(cfgPath, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
 	cmd := hostcmd.NewCommand()
-	stdout, stderr, logs, err := testutil.ExecuteCommand(cmd, "--config", cfgPath)
+	stdout, stderr, logs, err := testutil.ExecuteCommand(t, cmd, "--config", cfgPath)
 
 	require.NoError(t, err)
 	require.Contains(t, stdout, "[host] ok")
 	require.Empty(t, stderr)
 
-	testutil.LogContains(t, logs[0], "key", "/tmp/id.pub")
+	testutil.LogContains(t, logs[0], "key", validKeyFilePath)
 	testutil.LogContains(t, logs[0], "principal", "[web]")
 	testutil.LogContains(t, logs[0], "ca-server-url", "https://ca.example.test")
 	testutil.LogContains(t, logs[0], "client-id", "client")
@@ -117,6 +124,8 @@ token-url: "https://idp.example.test/token"
 }
 
 func TestHostCmd_Precedence_ConfigEnvFlag(t *testing.T) {
+	validKeyFilePath := testutil.ProjectPath(t, "testdata", "id.pub")
+
 	tmp := t.TempDir()
 	cfgPath := filepath.Join(tmp, "config.yml")
 
@@ -139,9 +148,9 @@ token_url: "https://idp.from.config/token"
 	t.Setenv("SSH_KEYSIGN_CLIENT_SECRET", "secret_from_env")
 
 	cmd := hostcmd.NewCommand()
-	stdout, stderr, logs, err := testutil.ExecuteCommand(cmd,
+	stdout, stderr, logs, err := testutil.ExecuteCommand(t, cmd,
 		"--config", cfgPath,
-		"--key", "/tmp/id.pub",
+		"--key", validKeyFilePath,
 		"--principal", "flag_principal",
 		"--ca-server-url", "https://ca.from.flag",
 		"--token-url", "https://idp.from.flag/token",
@@ -150,7 +159,7 @@ token_url: "https://idp.from.config/token"
 	require.NoError(t, err)
 	require.Contains(t, stdout, "[host] ok")
 
-	testutil.LogContains(t, logs[0], "key", "/tmp/id.pub")
+	testutil.LogContains(t, logs[0], "key", validKeyFilePath)
 	testutil.LogContains(t, logs[0], "principal", "[flag_principal]")
 	testutil.LogContains(t, logs[0], "ca-server-url", "https://ca.from.flag")
 	testutil.LogContains(t, logs[0], "client-id", "id_from_env")

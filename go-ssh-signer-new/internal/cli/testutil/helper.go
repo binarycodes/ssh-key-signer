@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -16,7 +18,9 @@ import (
 	"binarycodes/ssh-keysign/internal/logging"
 )
 
-func ExecuteCommand(cmd *cobra.Command, args ...string) (stoutStr, stderrStr string, logs []observer.LoggedEntry, err error) {
+func ExecuteCommand(t *testing.T, cmd *cobra.Command, args ...string) (stoutStr, stderrStr string, logs []observer.LoggedEntry, err error) {
+	t.Helper()
+
 	var stdout, stderr bytes.Buffer
 
 	ctx := context.Background()
@@ -42,6 +46,8 @@ func ExecuteCommand(cmd *cobra.Command, args ...string) (stoutStr, stderrStr str
 }
 
 func LogContains(t *testing.T, log observer.LoggedEntry, key, val string) {
+	t.Helper()
+
 	var stringVal string
 	if v, ok := log.ContextMap()[key]; ok && fmt.Sprintf("%v", v) == val {
 		return
@@ -53,15 +59,42 @@ func LogContains(t *testing.T, log observer.LoggedEntry, key, val string) {
 }
 
 func LogNotContains(t *testing.T, log observer.LoggedEntry, key string) {
+	t.Helper()
+
 	if _, ok := log.ContextMap()[key]; ok {
 		t.Fatalf("expected log to not contain key=%s but it was found", key)
 	}
 }
 
 func LogContainsValue(t *testing.T, log observer.LoggedEntry, val string) {
+	t.Helper()
+
 	require.Contains(t, fmt.Sprint(log.ContextMap()), val)
 }
 
 func LogNotContainsValue(t *testing.T, log observer.LoggedEntry, val string) {
+	t.Helper()
+
 	require.NotContains(t, fmt.Sprint(log.ContextMap()), val)
+}
+
+func ProjectPath(t *testing.T, elems ...string) string {
+	t.Helper()
+
+	dir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cwd := dir
+	for {
+		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+			return filepath.Join(append([]string{dir}, elems...)...)
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			t.Fatal("go.mod not found while walking up from", cwd)
+		}
+		dir = parent
+	}
 }

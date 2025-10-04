@@ -2,17 +2,16 @@ package hostsvc
 
 import (
 	"context"
-	"io"
 
 	"go.uber.org/zap"
 
-	"binarycodes/ssh-keysign/internal/apperror"
 	"binarycodes/ssh-keysign/internal/config"
 	"binarycodes/ssh-keysign/internal/ctxkeys"
 	"binarycodes/ssh-keysign/internal/logging"
+	"binarycodes/ssh-keysign/internal/service/keys"
 )
 
-func Run(ctx context.Context, out io.Writer, help apperror.HelpMethod, cfg config.Config) error {
+func Run(ctx context.Context, cfg config.Config) error {
 	log := ctxkeys.LoggerFrom(ctx)
 	p := ctxkeys.PrinterFrom(ctx)
 
@@ -25,13 +24,27 @@ func Run(ctx context.Context, out io.Writer, help apperror.HelpMethod, cfg confi
 		zap.String("token-url", cfg.OAuth.TokenURL),
 	)
 
-	p.V(logging.VeryVerbose).Println("initiating connection to OAuth")
-	p.Println("[host] ok")
+	p.V(logging.Verbose).Println("fetching key details")
 
+	keyhandler := &keys.KeyHandler{}
+	kType, key, err := keyhandler.ReadPublicKey(ctx, cfg.Host.Key)
+	if err != nil {
+		return err
+	}
+
+	p.V(logging.VeryVerbose).Printf("found key type: %v | public key: %v\n", kType, key)
+	log.Info("public key details",
+		zap.String("type", kType),
+		zap.String("key", key),
+	)
+
+	p.V(logging.Verbose).Println("initiating connection to OAuth")
 	// TODO: implement:
 	// 1) read public key at o.Key
 	// 2) request token using o.ClientID/o.Secret against o.TokenURL
 	// 3) call o.CAServer to sign host cert with principals + duration
 	// 4) write cert to stdout/file
+
+	p.Println("[host] ok")
 	return nil
 }

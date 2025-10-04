@@ -13,7 +13,7 @@ import (
 
 func TestUsercmd_MissingKeyFails(t *testing.T) {
 	cmd := usercmd.NewCommand()
-	stdout, stderr, logs, err := testutil.ExecuteCommand(cmd)
+	stdout, stderr, logs, err := testutil.ExecuteCommand(t, cmd)
 
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "missing required parameters")
@@ -24,7 +24,7 @@ func TestUsercmd_MissingKeyFails(t *testing.T) {
 
 func TestUsercmd_OIDCIsOptional(t *testing.T) {
 	cmd := usercmd.NewCommand()
-	stdout, stderr, logs, err := testutil.ExecuteCommand(cmd,
+	stdout, stderr, logs, err := testutil.ExecuteCommand(t, cmd,
 		"--key", "/tmp/id.pub",
 		"--principal", "web",
 	)
@@ -41,7 +41,7 @@ func TestUsercmd_OIDCIsOptional(t *testing.T) {
 
 func TestUsercmd_WithKeySucceeds(t *testing.T) {
 	cmd := usercmd.NewCommand()
-	stdout, stderr, logs, err := testutil.ExecuteCommand(cmd,
+	stdout, stderr, logs, err := testutil.ExecuteCommand(t, cmd,
 		"--key", "/tmp/id.pub",
 		"--principal", "web",
 		"--ca-server-url", "http://localhost:8888",
@@ -67,7 +67,7 @@ func TestUsercmd_BadConfigFails(t *testing.T) {
 	}
 
 	cmd := usercmd.NewCommand()
-	stdout, stderr, logs, err := testutil.ExecuteCommand(cmd, "--config", cfgPath)
+	stdout, stderr, logs, err := testutil.ExecuteCommand(t, cmd, "--config", cfgPath)
 
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "failed to read config")
@@ -95,7 +95,7 @@ token-url: "https://idp.example.test/token"
 	}
 
 	cmd := usercmd.NewCommand()
-	stdout, stderr, logs, err := testutil.ExecuteCommand(cmd, "--config", cfgPath)
+	stdout, stderr, logs, err := testutil.ExecuteCommand(t, cmd, "--config", cfgPath)
 
 	require.NoError(t, err)
 	require.Contains(t, stdout, "[user] ok")
@@ -142,7 +142,7 @@ token_url: "https://idp.from.config/token"
 	t.Setenv("SSH_KEYSIGN_CLIENT_SECRET", "secret_from_env")
 
 	cmd := usercmd.NewCommand()
-	stdout, stderr, logs, err := testutil.ExecuteCommand(cmd,
+	stdout, stderr, logs, err := testutil.ExecuteCommand(t, cmd,
 		"--config", cfgPath,
 		"--key", "/tmp/id.pub",
 		"--principal", "flag_principal",

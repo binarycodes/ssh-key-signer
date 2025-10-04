@@ -10,7 +10,7 @@ import (
 	"binarycodes/ssh-keysign/internal/config"
 	"binarycodes/ssh-keysign/internal/constants"
 	"binarycodes/ssh-keysign/internal/ctxkeys"
-	"binarycodes/ssh-keysign/internal/usersvc"
+	"binarycodes/ssh-keysign/internal/service/usersvc"
 )
 
 func NewCommand() *cobra.Command {
@@ -41,7 +41,7 @@ func NewCommand() *cobra.Command {
 				return err
 			}
 
-			err := usersvc.Run(cmd.Context(), cmd.OutOrStdout(), cmd.Help, cfg)
+			err := usersvc.Run(cmd.Context(), cfg)
 			return err
 		},
 	}
