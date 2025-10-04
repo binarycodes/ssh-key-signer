@@ -23,7 +23,6 @@ type appError struct {
 	Op      string // optional: "cert.IssueUser"
 	Type    Kind
 	OpError error
-	Help    HelpMethod // optional: call to render help later
 }
 
 func (kind Kind) ExitCode() int {
@@ -54,9 +53,9 @@ func (appErr *appError) Unwrap() error {
 	return appErr.OpError
 }
 
-func ErrUsage(message string, help HelpMethod) error {
+func ErrUsage(message string) error {
 	appErr := errors.New(message)
-	return &appError{Type: KUsage, OpError: appErr, Help: help}
+	return &appError{Type: KUsage, OpError: appErr}
 }
 
 func ErrAuth(err error) error {
@@ -92,12 +91,4 @@ func KindOf(err error) Kind {
 		return appErr.Type
 	}
 	return KUnknown
-}
-
-func HelpFor(err error) HelpMethod {
-	var appErr *appError
-	if errors.As(err, &appErr) && appErr.Help != nil {
-		return appErr.Help
-	}
-	return nil
 }

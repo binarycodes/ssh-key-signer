@@ -3,6 +3,8 @@ package config
 import (
 	"fmt"
 	"strings"
+
+	"binarycodes/ssh-keysign/internal/apperror"
 )
 
 type OAuth struct {
@@ -57,7 +59,7 @@ func (c *Config) ValidateHost() error {
 	}
 
 	if len(missing) > 0 {
-		return fmt.Errorf("host: missing required parameters: %s", strings.Join(missing, ", "))
+		return apperror.ErrUsage(fmt.Sprintf("host: missing required parameters: %s", strings.Join(missing, ", ")))
 	}
 
 	return nil
@@ -74,7 +76,7 @@ func (c *Config) ValidateUser() error {
 	}
 
 	if len(missing) > 0 {
-		return fmt.Errorf("user: missing required parameters: %s", strings.Join(missing, ", "))
+		return apperror.ErrUsage(fmt.Sprintf("user: missing required parameters: %s", strings.Join(missing, ", ")))
 	}
 
 	if c.OAuth.ServerURL == "" && c.OAuth.ClientID == "" && c.OAuth.ClientSecret == "" && c.OAuth.TokenURL == "" {
@@ -82,7 +84,7 @@ func (c *Config) ValidateUser() error {
 	}
 
 	if c.OAuth.ServerURL == "" || c.OAuth.ClientID == "" || c.OAuth.ClientSecret == "" || c.OAuth.TokenURL == "" {
-		return fmt.Errorf("ca-server-url, client-id, client-secret, token-url either specify all or none")
+		return apperror.ErrUsage("ca-server-url, client-id, client-secret, token-url either specify all or none")
 	}
 
 	return nil
