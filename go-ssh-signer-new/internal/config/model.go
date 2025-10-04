@@ -2,6 +2,8 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"binarycodes/ssh-keysign/internal/apperror"
@@ -42,27 +44,15 @@ func (c *Config) ValidateHost() error {
 		missing = append(missing, "--principal / host.principal")
 	}
 
-	if c.OAuth.ServerURL == "" {
-		missing = append(missing, "--ca-server-url / ca_server_url")
-	}
-
-	if c.OAuth.ClientID == "" {
-		missing = append(missing, "--client-id / client_id")
-	}
-
-	if c.OAuth.ClientSecret == "" {
-		missing = append(missing, "--client-secret / client_secret")
-	}
-
-	if c.OAuth.TokenURL == "" {
-		missing = append(missing, "--token-url / token_url")
-	}
-
 	if len(missing) > 0 {
-		return apperror.ErrUsage(fmt.Sprintf("host: missing required parameters: %s", strings.Join(missing, ", ")))
+		return apperror.ErrUsage(fmt.Sprintf("missing required parameters: %s", strings.Join(missing, ", ")))
 	}
 
-	return nil
+	if err := ValidateOAuth(c.OAuth, true); err != nil {
+		return err
+	}
+
+	return ValidateKeyFile(c.Host.Key)
 }
 
 func (c *Config) ValidateUser() error {
@@ -76,15 +66,62 @@ func (c *Config) ValidateUser() error {
 	}
 
 	if len(missing) > 0 {
-		return apperror.ErrUsage(fmt.Sprintf("user: missing required parameters: %s", strings.Join(missing, ", ")))
+		return apperror.ErrUsage(fmt.Sprintf("missing required parameters: %s", strings.Join(missing, ", ")))
 	}
 
-	if c.OAuth.ServerURL == "" && c.OAuth.ClientID == "" && c.OAuth.ClientSecret == "" && c.OAuth.TokenURL == "" {
-		return nil
+	if err := ValidateOAuth(c.OAuth, false); err != nil {
+		return err
 	}
 
-	if c.OAuth.ServerURL == "" || c.OAuth.ClientID == "" || c.OAuth.ClientSecret == "" || c.OAuth.TokenURL == "" {
-		return apperror.ErrUsage("ca-server-url, client-id, client-secret, token-url either specify all or none")
+	return ValidateKeyFile(c.User.Key)
+}
+
+func ValidateOAuth(o OAuth, required bool) error {
+	var missing []string
+
+	if !required {
+		if o.ServerURL == "" && o.ClientID == "" && o.ClientSecret == "" && o.TokenURL == "" {
+			return nil
+		}
+
+		if o.ServerURL == "" || o.ClientID == "" || o.ClientSecret == "" || o.TokenURL == "" {
+			return apperror.ErrUsage("ca-server-url, client-id, client-secret, token-url either specify all or none")
+		}
+	}
+
+	// validations for oauth required
+
+	if o.ServerURL == "" {
+		missing = append(missing, "--ca-server-url / ca_server_url")
+	}
+
+	if o.ClientID == "" {
+		missing = append(missing, "--client-id / client_id")
+	}
+
+	if o.ClientSecret == "" {
+		missing = append(missing, "--client-secret / client_secret")
+	}
+
+	if o.TokenURL == "" {
+		missing = append(missing, "--token-url / token_url")
+	}
+
+	if len(missing) > 0 {
+		return apperror.ErrUsage(fmt.Sprintf("missing required parameters: %s", strings.Join(missing, ", ")))
+	}
+
+	return nil
+}
+
+func ValidateKeyFile(keyfilePath string) error {
+	extension := filepath.Ext(keyfilePath)
+	if extension != ".pub" {
+		return apperror.ErrUsage("only public key files are expected here. [Hint: name ending in .pub]")
+	}
+
+	if _, err := os.Stat(keyfilePath); err != nil {
+		return apperror.ErrFileSystem(err)
 	}
 
 	return nil

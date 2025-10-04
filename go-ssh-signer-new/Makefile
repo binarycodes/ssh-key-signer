@@ -56,6 +56,7 @@ clean:
 	rm -rf $(BUILD_DIR)
 
 test:
+	touch /tmp/id.pub
 	go test --race -v ./...
 
 cover:

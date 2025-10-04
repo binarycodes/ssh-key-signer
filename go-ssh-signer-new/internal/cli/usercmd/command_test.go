@@ -144,7 +144,7 @@ token_url: "https://idp.from.config/token"
 	cmd := usercmd.NewCommand()
 	stdout, stderr, logs, err := testutil.ExecuteCommand(cmd,
 		"--config", cfgPath,
-		"--key", "/from/flag.pub",
+		"--key", "/tmp/id.pub",
 		"--principal", "flag_principal",
 		"--ca-server-url", "https://ca.from.flag",
 		"--token-url", "https://idp.from.flag/token",
@@ -153,7 +153,7 @@ token_url: "https://idp.from.config/token"
 	require.NoError(t, err)
 	require.Contains(t, stdout, "[user] ok")
 
-	testutil.LogContains(t, logs[0], "key", "/from/flag.pub")
+	testutil.LogContains(t, logs[0], "key", "/tmp/id.pub")
 	testutil.LogContains(t, logs[0], "principal", "[flag_principal]")
 	testutil.LogContains(t, logs[0], "ca-server-url", "https://ca.from.flag")
 	testutil.LogContains(t, logs[0], "client-id", "id_from_env")
