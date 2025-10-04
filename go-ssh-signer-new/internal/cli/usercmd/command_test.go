@@ -1,8 +1,7 @@
 package usercmd_test
 
 import (
-	"os"
-	"path/filepath"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -23,9 +22,11 @@ func TestUsercmd_MissingKeyFails(t *testing.T) {
 }
 
 func TestUsercmd_OIDCIsOptional(t *testing.T) {
+	validKeyFilePath := testutil.ProjectPath(t, "testdata", "id.pub")
+
 	cmd := usercmd.NewCommand()
 	stdout, stderr, logs, err := testutil.ExecuteCommand(t, cmd,
-		"--key", "/tmp/id.pub",
+		"--key", validKeyFilePath,
 		"--principal", "web",
 	)
 
@@ -33,16 +34,18 @@ func TestUsercmd_OIDCIsOptional(t *testing.T) {
 	require.Contains(t, stdout, "[user] ok")
 	require.Empty(t, stderr)
 
-	testutil.LogContains(t, logs[0], "key", "/tmp/id.pub")
+	testutil.LogContains(t, logs[0], "key", validKeyFilePath)
 	testutil.LogContains(t, logs[0], "principal", "[web]")
 
 	require.Equal(t, "user run", logs[0].Message)
 }
 
 func TestUsercmd_WithKeySucceeds(t *testing.T) {
+	validKeyFilePath := testutil.ProjectPath(t, "testdata", "id.pub")
+
 	cmd := usercmd.NewCommand()
 	stdout, stderr, logs, err := testutil.ExecuteCommand(t, cmd,
-		"--key", "/tmp/id.pub",
+		"--key", validKeyFilePath,
 		"--principal", "web",
 		"--ca-server-url", "http://localhost:8888",
 		"--client-id", "clientId",
@@ -58,13 +61,8 @@ func TestUsercmd_WithKeySucceeds(t *testing.T) {
 }
 
 func TestUsercmd_BadConfigFails(t *testing.T) {
-	tmp := t.TempDir()
-	cfgPath := filepath.Join(tmp, "bad.yml")
-
 	content := []byte("not: [valid\n")
-	if err := os.WriteFile(cfgPath, content, 0o644); err != nil {
-		t.Fatal(err)
-	}
+	cfgPath := testutil.WriteTempFile(t, "config.yml", []byte(content))
 
 	cmd := usercmd.NewCommand()
 	stdout, stderr, logs, err := testutil.ExecuteCommand(t, cmd, "--config", cfgPath)
@@ -77,22 +75,20 @@ func TestUsercmd_BadConfigFails(t *testing.T) {
 }
 
 func TestUsercmd_WithValidConfigSucceeds(t *testing.T) {
-	tmp := t.TempDir()
-	cfgPath := filepath.Join(tmp, "good.yml")
+	validKeyFilePath := testutil.ProjectPath(t, "testdata", "id.pub")
 
-	content := []byte(`
+	content := fmt.Sprintf(`
 user:
-  key: "/tmp/id.pub"
+  key: %s
   principal:
     - web
 ca-server-url: "https://ca.example.test"
 client-id: "client"
 client-secret: "secret"
 token-url: "https://idp.example.test/token"
-`)
-	if err := os.WriteFile(cfgPath, content, 0o644); err != nil {
-		t.Fatal(err)
-	}
+`, validKeyFilePath)
+
+	cfgPath := testutil.WriteTempFile(t, "config.yml", []byte(content))
 
 	cmd := usercmd.NewCommand()
 	stdout, stderr, logs, err := testutil.ExecuteCommand(t, cmd, "--config", cfgPath)
@@ -101,7 +97,7 @@ token-url: "https://idp.example.test/token"
 	require.Contains(t, stdout, "[user] ok")
 	require.Empty(t, stderr)
 
-	testutil.LogContains(t, logs[0], "key", "/tmp/id.pub")
+	testutil.LogContains(t, logs[0], "key", validKeyFilePath)
 	testutil.LogContains(t, logs[0], "principal", "[web]")
 	testutil.LogContains(t, logs[0], "ca-server-url", "https://ca.example.test")
 	testutil.LogContains(t, logs[0], "client-id", "client")
@@ -120,10 +116,8 @@ token-url: "https://idp.example.test/token"
 }
 
 func TestUsercmd_Precedence_ConfigEnvFlag(t *testing.T) {
-	tmp := t.TempDir()
-	cfgPath := filepath.Join(tmp, "config.yml")
+	validKeyFilePath := testutil.ProjectPath(t, "testdata", "id.pub")
 
-	// Config sets key + principal
 	content := []byte(`
 user:
   key: "/from/config.pub"
@@ -134,9 +128,8 @@ client_id: "id_from_config"
 client_secret: "secret_from_config"
 token_url: "https://idp.from.config/token"
 `)
-	if err := os.WriteFile(cfgPath, content, 0o644); err != nil {
-		t.Fatal(err)
-	}
+
+	cfgPath := testutil.WriteTempFile(t, "config.yml", []byte(content))
 
 	t.Setenv("SSH_KEYSIGN_CLIENT_ID", "id_from_env")
 	t.Setenv("SSH_KEYSIGN_CLIENT_SECRET", "secret_from_env")
@@ -144,7 +137,7 @@ token_url: "https://idp.from.config/token"
 	cmd := usercmd.NewCommand()
 	stdout, stderr, logs, err := testutil.ExecuteCommand(t, cmd,
 		"--config", cfgPath,
-		"--key", "/tmp/id.pub",
+		"--key", validKeyFilePath,
 		"--principal", "flag_principal",
 		"--ca-server-url", "https://ca.from.flag",
 		"--token-url", "https://idp.from.flag/token",
@@ -153,7 +146,7 @@ token_url: "https://idp.from.config/token"
 	require.NoError(t, err)
 	require.Contains(t, stdout, "[user] ok")
 
-	testutil.LogContains(t, logs[0], "key", "/tmp/id.pub")
+	testutil.LogContains(t, logs[0], "key", validKeyFilePath)
 	testutil.LogContains(t, logs[0], "principal", "[flag_principal]")
 	testutil.LogContains(t, logs[0], "ca-server-url", "https://ca.from.flag")
 	testutil.LogContains(t, logs[0], "client-id", "id_from_env")

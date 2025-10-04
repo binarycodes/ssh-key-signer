@@ -2,8 +2,6 @@ package hostcmd_test
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -60,13 +58,8 @@ func TestHostCmd_WithKeySucceeds(t *testing.T) {
 }
 
 func TestHostCmd_BadConfigFails(t *testing.T) {
-	tmp := t.TempDir()
-	cfgPath := filepath.Join(tmp, "bad.yml")
-
 	content := []byte("not: [valid\n")
-	if err := os.WriteFile(cfgPath, content, 0o644); err != nil {
-		t.Fatal(err)
-	}
+	cfgPath := testutil.WriteTempFile(t, "config.yml", []byte(content))
 
 	cmd := hostcmd.NewCommand()
 	stdout, stderr, logs, err := testutil.ExecuteCommand(t, cmd, "--config", cfgPath)
@@ -81,9 +74,6 @@ func TestHostCmd_BadConfigFails(t *testing.T) {
 func TestHostCmd_WithValidConfigSucceeds(t *testing.T) {
 	validKeyFilePath := testutil.ProjectPath(t, "testdata", "id.pub")
 
-	tmp := t.TempDir()
-	cfgPath := filepath.Join(tmp, "good.yml")
-
 	content := fmt.Sprintf(`
 host:
   key: %s
@@ -94,9 +84,8 @@ client-id: "client"
 client-secret: "secret"
 token-url: "https://idp.example.test/token"
 `, validKeyFilePath)
-	if err := os.WriteFile(cfgPath, []byte(content), 0o644); err != nil {
-		t.Fatal(err)
-	}
+
+	cfgPath := testutil.WriteTempFile(t, "config.yml", []byte(content))
 
 	cmd := hostcmd.NewCommand()
 	stdout, stderr, logs, err := testutil.ExecuteCommand(t, cmd, "--config", cfgPath)
@@ -126,9 +115,6 @@ token-url: "https://idp.example.test/token"
 func TestHostCmd_Precedence_ConfigEnvFlag(t *testing.T) {
 	validKeyFilePath := testutil.ProjectPath(t, "testdata", "id.pub")
 
-	tmp := t.TempDir()
-	cfgPath := filepath.Join(tmp, "config.yml")
-
 	// Config sets key + principal
 	content := []byte(`
 host:
@@ -140,9 +126,7 @@ client_id: "id_from_config"
 client_secret: "secret_from_config"
 token_url: "https://idp.from.config/token"
 `)
-	if err := os.WriteFile(cfgPath, content, 0o644); err != nil {
-		t.Fatal(err)
-	}
+	cfgPath := testutil.WriteTempFile(t, "config.yml", content)
 
 	t.Setenv("SSH_KEYSIGN_CLIENT_ID", "id_from_env")
 	t.Setenv("SSH_KEYSIGN_CLIENT_SECRET", "secret_from_env")

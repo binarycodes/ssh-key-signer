@@ -98,3 +98,16 @@ func ProjectPath(t *testing.T, elems ...string) string {
 		dir = parent
 	}
 }
+
+func WriteTempFile(t *testing.T, filename string, content []byte) (fPath string) {
+	t.Helper()
+
+	tmp := t.TempDir()
+	fPath = filepath.Join(tmp, filename)
+
+	if err := os.WriteFile(fPath, content, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	return fPath
+}
