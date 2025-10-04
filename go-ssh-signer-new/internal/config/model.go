@@ -1,7 +1,8 @@
 package config
 
 import (
-	"binarycodes/ssh-keysign/internal/apperror"
+	"fmt"
+	"strings"
 )
 
 type OAuth struct {
@@ -12,48 +13,76 @@ type OAuth struct {
 }
 
 type Host struct {
-	Key        string   `mapstructure:"host.key"`
-	Principals []string `mapstructure:"host.principal"`
+	Key             string   `mapstructure:"key"`
+	Principals      []string `mapstructure:"principal"`
+	DurationSeconds uint64   `mapstructure:"duration"`
 }
 
 type User struct {
-	Key        string   `mapstructure:"user.key"`
-	Principals []string `mapstructure:"user.principal"`
+	Key             string   `mapstructure:"key"`
+	Principals      []string `mapstructure:"principal"`
+	DurationSeconds uint64   `mapstructure:"duration"`
 }
 
-type Options struct {
-	Key        string
-	Principals []string
-	Duration   uint64 /* in seconds */
-	CAServer   string
-	ClientID   string
-	Secret     string
-	TokenURL   string
+type Config struct {
+	OAuth OAuth `mapstructure:",squash"`
+	Host  Host  `mapstructure:"host"`
+	User  User  `mapstructure:"user"`
 }
 
-func (o Options) ValidateForHost(help apperror.HelpMethod) error {
-	if o.Key == "" || len(o.Principals) == 0 {
-		return apperror.ErrUsage("key and principals are required", help)
+func (c *Config) ValidateHost() error {
+	var missing []string
+	if c.Host.Key == "" {
+		missing = append(missing, "--key / host.key")
 	}
 
-	if o.CAServer == "" || o.ClientID == "" || o.Secret == "" || o.TokenURL == "" {
-		return apperror.ErrUsage("ca-server-url, client-id, client-secret, token-url required", help)
+	if len(c.Host.Principals) == 0 {
+		missing = append(missing, "--principal / host.principal")
+	}
+
+	if c.OAuth.ServerURL == "" {
+		missing = append(missing, "--ca-server-url / ca_server_url")
+	}
+
+	if c.OAuth.ClientID == "" {
+		missing = append(missing, "--client-id / client_id")
+	}
+
+	if c.OAuth.ClientSecret == "" {
+		missing = append(missing, "--client-secret / client_secret")
+	}
+
+	if c.OAuth.TokenURL == "" {
+		missing = append(missing, "--token-url / token_url")
+	}
+
+	if len(missing) > 0 {
+		return fmt.Errorf("host: missing required parameters: %s", strings.Join(missing, ", "))
 	}
 
 	return nil
 }
 
-func (o Options) ValidateForUser(help apperror.HelpMethod) error {
-	if o.Key == "" || len(o.Principals) == 0 {
-		return apperror.ErrUsage("key and principals are required", help)
+func (c *Config) ValidateUser() error {
+	var missing []string
+	if c.User.Key == "" {
+		missing = append(missing, "--key / user.key")
 	}
 
-	if o.CAServer == "" && o.ClientID == "" && o.Secret == "" && o.TokenURL == "" {
+	if len(c.User.Principals) == 0 {
+		missing = append(missing, "--principal / user.principal")
+	}
+
+	if len(missing) > 0 {
+		return fmt.Errorf("user: missing required parameters: %s", strings.Join(missing, ", "))
+	}
+
+	if c.OAuth.ServerURL == "" && c.OAuth.ClientID == "" && c.OAuth.ClientSecret == "" && c.OAuth.TokenURL == "" {
 		return nil
 	}
 
-	if o.CAServer == "" || o.ClientID == "" || o.Secret == "" || o.TokenURL == "" {
-		return apperror.ErrUsage("ca-server-url, client-id, client-secret, token-url either specify all or none", help)
+	if c.OAuth.ServerURL == "" || c.OAuth.ClientID == "" || c.OAuth.ClientSecret == "" || c.OAuth.TokenURL == "" {
+		return fmt.Errorf("ca-server-url, client-id, client-secret, token-url either specify all or none")
 	}
 
 	return nil

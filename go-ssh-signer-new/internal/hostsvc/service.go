@@ -12,20 +12,16 @@ import (
 	"binarycodes/ssh-keysign/internal/ctxkeys"
 )
 
-func Run(ctx context.Context, out io.Writer, help apperror.HelpMethod, opts config.Options) error {
+func Run(ctx context.Context, out io.Writer, help apperror.HelpMethod, cfg config.Config) error {
 	log := ctxkeys.LoggerFrom(ctx)
 
-	if err := opts.ValidateForHost(help); err != nil {
-		return err
-	}
-
 	log.Info("host run",
-		zap.String("key", opts.Key),
-		zap.Strings("principal", opts.Principals),
-		zap.Uint64("duration", opts.Duration),
-		zap.String("ca-server-url", opts.CAServer),
-		zap.String("client-id", opts.ClientID),
-		zap.String("token-url", opts.TokenURL),
+		zap.String("key", cfg.Host.Key),
+		zap.Strings("principal", cfg.Host.Principals),
+		zap.Uint64("duration", cfg.Host.DurationSeconds),
+		zap.String("ca-server-url", cfg.OAuth.ServerURL),
+		zap.String("client-id", cfg.OAuth.ClientID),
+		zap.String("token-url", cfg.OAuth.TokenURL),
 	)
 
 	_, _ = fmt.Fprintln(out, "[host] ok")

@@ -2,6 +2,7 @@ package usercmd
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -21,33 +22,33 @@ func NewCommand() *cobra.Command {
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			v := ctxkeys.ViperFrom(cmd.Context())
 
-			v.SetDefault("duration", constants.DefaultDurationForUserKey())
-
 			err := errors.Join(
 				v.BindPFlag("user.key", cmd.Flags().Lookup("key")),
 				v.BindPFlag("user.principal", cmd.Flags().Lookup("principal")),
+				v.BindPFlag("user.duration", cmd.Flags().Lookup("duration")),
 			)
 			return err
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			v := ctxkeys.ViperFrom(cmd.Context())
-			opts := config.Options{
-				Key:        v.GetString("user.key"),
-				Principals: v.GetStringSlice("user.principal"),
-				Duration:   v.GetUint64("duration"),
-				CAServer:   v.GetString("ca-server-url"),
-				ClientID:   v.GetString("client-id"),
-				Secret:     v.GetString("client-secret"),
-				TokenURL:   v.GetString("token-url"),
+
+			cfg, errC := config.Load(v)
+			if errC != nil {
+				return fmt.Errorf("invalid configuration: %w", errC)
 			}
 
-			err := usersvc.Run(cmd.Context(), cmd.OutOrStdout(), cmd.Help, opts)
+			if err := cfg.ValidateUser(); err != nil {
+				return err
+			}
+
+			err := usersvc.Run(cmd.Context(), cmd.OutOrStdout(), cmd.Help, cfg)
 			return err
 		},
 	}
 
 	userCmd.Flags().StringP("key", "k", "", "path to public key file")
 	userCmd.Flags().StringSliceP("principal", "p", nil, "comma-separated principal names")
+	userCmd.Flags().Uint64P("duration", "d", constants.DefaultDurationForUserKey(), "duration in seconds")
 
 	cli.WireCommonFlags(userCmd)
 

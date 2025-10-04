@@ -2,6 +2,7 @@ package hostcmd
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -21,33 +22,33 @@ func NewCommand() *cobra.Command {
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			v := ctxkeys.ViperFrom(cmd.Context())
 
-			v.SetDefault("duration", constants.DefaultDurationForHostKey())
-
 			err := errors.Join(
 				v.BindPFlag("host.key", cmd.Flags().Lookup("key")),
 				v.BindPFlag("host.principal", cmd.Flags().Lookup("principal")),
+				v.BindPFlag("host.duration", cmd.Flags().Lookup("duration")),
 			)
 			return err
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			v := ctxkeys.ViperFrom(cmd.Context())
-			opts := config.Options{
-				Key:        v.GetString("host.key"),
-				Principals: v.GetStringSlice("host.principal"),
-				Duration:   v.GetUint64("duration"),
-				CAServer:   v.GetString("ca-server-url"),
-				ClientID:   v.GetString("client-id"),
-				Secret:     v.GetString("client-secret"),
-				TokenURL:   v.GetString("token-url"),
+
+			cfg, errC := config.Load(v)
+			if errC != nil {
+				return fmt.Errorf("invalid configuration: %w", errC)
 			}
 
-			err := hostsvc.Run(cmd.Context(), cmd.OutOrStdout(), cmd.Help, opts)
+			if err := cfg.ValidateHost(); err != nil {
+				return err
+			}
+
+			err := hostsvc.Run(cmd.Context(), cmd.OutOrStdout(), cmd.Help, cfg)
 			return err
 		},
 	}
 
 	hostCmd.Flags().StringP("key", "k", "", "path to public key file")
 	hostCmd.Flags().StringSliceP("principal", "p", nil, "comma-separated principal names")
+	hostCmd.Flags().Uint64P("duration", "d", constants.DefaultDurationForHostKey(), "duration in seconds")
 
 	cli.WireCommonFlags(hostCmd)
 

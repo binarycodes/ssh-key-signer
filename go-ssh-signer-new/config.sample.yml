@@ -1,25 +1,22 @@
-# logging
 log-level: "error"        # error|warn|info|debug
 log-dest: "stderr"       # stderr|stdout|file
 
-# duration applies to both flows (seconds)
-duration: 3600
-
-# optional for user, mandatory for host
 ca-server-url: "https://ca.example.test"
 client-id: "example-client-id"
 client-secret: "example-client-secret"
 token-url: "https://idp.example.test/oauth/token"
 
-# per-command convenience (either can be supplied via flags)
 user:
   key: "/home/me/.ssh/id_ed25519.pub"
   principal:
     - alice
     - devops
+  duration: 3600
 
 host:
   key: "/etc/ssh/ssh_host_ed25519_key.pub"
   principal:
-    - ip-10-0-1-23.ec2.internal web
+    - ip-10-0-1-23.ec2.internal
+    - web
+  duration: 3600
 

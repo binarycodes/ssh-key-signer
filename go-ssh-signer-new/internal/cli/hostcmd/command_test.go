@@ -16,7 +16,7 @@ func TestHostCmd_MissingKeyFails(t *testing.T) {
 	stdout, stderr, logs, err := testutil.ExecuteCommand(cmd)
 
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "key and principals are required")
+	require.Contains(t, err.Error(), "missing required parameters")
 	require.Contains(t, stdout, "Usage:")
 	require.Contains(t, stderr, "Error:")
 	require.Empty(t, logs)
@@ -30,7 +30,7 @@ func TestHostCmd_MissingOIDCFails(t *testing.T) {
 	)
 
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "ca-server-url, client-id, client-secret, token-url required")
+	require.Contains(t, err.Error(), "missing required parameters")
 	require.Contains(t, stdout, "Usage:")
 	require.Contains(t, stderr, "Error:")
 	require.Empty(t, logs)

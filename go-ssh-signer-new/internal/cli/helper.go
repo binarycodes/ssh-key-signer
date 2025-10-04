@@ -18,7 +18,6 @@ import (
 
 func WireCommonFlags(c *cobra.Command) {
 	c.Flags().StringP("config", "c", "", "path to config file")
-	c.Flags().Uint64P("duration", "d", 0, "duration in seconds")
 	c.Flags().String("ca-server-url", "", "CA server URL")
 	c.Flags().String("client-id", "", "OIDC client ID")
 	c.Flags().String("client-secret", "", "OIDC client secret")
