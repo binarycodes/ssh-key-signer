@@ -5,16 +5,16 @@ import (
 
 	"go.uber.org/zap"
 
-	"binarycodes/ssh-keysign/internal/config"
 	"binarycodes/ssh-keysign/internal/ctxkeys"
 	"binarycodes/ssh-keysign/internal/logging"
-	"binarycodes/ssh-keysign/internal/service/keys"
+	"binarycodes/ssh-keysign/internal/service"
 )
 
-func Run(ctx context.Context, cfg config.Config) error {
+func Run(ctx context.Context, r *service.Runner) error {
 	log := ctxkeys.LoggerFrom(ctx)
 	p := ctxkeys.PrinterFrom(ctx)
 
+	cfg := r.Config
 	log.Info("host run",
 		zap.String("key", cfg.Host.Key),
 		zap.Strings("principal", cfg.Host.Principals),
@@ -26,8 +26,7 @@ func Run(ctx context.Context, cfg config.Config) error {
 
 	p.V(logging.Verbose).Println("fetching key details")
 
-	keyhandler := &keys.KeyHandler{}
-	kType, key, err := keyhandler.ReadPublicKey(ctx, cfg.Host.Key)
+	kType, key, err := r.KHandler.ReadPublicKey(ctx, cfg.Host.Key)
 	if err != nil {
 		return err
 	}

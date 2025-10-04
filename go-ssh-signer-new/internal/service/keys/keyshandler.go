@@ -53,3 +53,6 @@ func parsePublicKey(pub []byte) (keyType, pubKey string, err error) {
 	pubKeyStr := strings.TrimSpace(string(ssh.MarshalAuthorizedKey(pk)))
 	return pk.Type(), pubKeyStr, nil
 }
+
+func (KeyHandler) WriteAtomic(path string, data []byte, perm uint32) error { return nil }
+func (KeyHandler) BackupIfExists(path string) error                        { return nil }

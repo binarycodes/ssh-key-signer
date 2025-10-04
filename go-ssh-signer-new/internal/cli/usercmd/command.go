@@ -10,6 +10,9 @@ import (
 	"binarycodes/ssh-keysign/internal/config"
 	"binarycodes/ssh-keysign/internal/constants"
 	"binarycodes/ssh-keysign/internal/ctxkeys"
+	"binarycodes/ssh-keysign/internal/service"
+	"binarycodes/ssh-keysign/internal/service/cacert"
+	"binarycodes/ssh-keysign/internal/service/keys"
 	"binarycodes/ssh-keysign/internal/service/usersvc"
 )
 
@@ -41,7 +44,12 @@ func NewCommand() *cobra.Command {
 				return err
 			}
 
-			err := usersvc.Run(cmd.Context(), cfg)
+			runner := &service.Runner{
+				KHandler: keys.KeyHandler{},
+				CClient:  cacert.CACertClient{},
+				Config:   cfg,
+			}
+			err := usersvc.Run(cmd.Context(), runner)
 			return err
 		},
 	}
