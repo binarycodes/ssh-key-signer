@@ -1,49 +1,71 @@
 package usercmd_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 
 	"binarycodes/ssh-keysign/internal/cli/testutil"
 	"binarycodes/ssh-keysign/internal/cli/usercmd"
+	"binarycodes/ssh-keysign/internal/service"
 )
 
+type fakeUserService struct {
+	called bool
+	got    service.Runner
+	err    error
+}
+
+func (f *fakeUserService) SignUserKey(ctx context.Context, r *service.Runner) error {
+	f.called = true
+	f.got = *r
+	return f.err
+}
+
 func TestUsercmd_MissingKeyFails(t *testing.T) {
-	cmd := usercmd.NewCommand()
+	fake := &fakeUserService{}
+	cmd := usercmd.NewCommand(usercmd.Deps{Service: fake})
 	stdout, stderr, logs, err := testutil.ExecuteCommand(t, cmd)
 
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "missing required parameters")
-	require.Contains(t, stdout, "Usage:")
-	require.Contains(t, stderr, "Error:")
-	require.Empty(t, logs)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "missing required parameters")
+	assert.Contains(t, stdout, "Usage:")
+	assert.Contains(t, stderr, "Error:")
+	assert.Empty(t, logs)
 }
 
 func TestUsercmd_OIDCIsOptional(t *testing.T) {
 	validKeyFilePath := testutil.ProjectPath(t, "testdata", "id.pub")
 
-	cmd := usercmd.NewCommand()
+	fake := &fakeUserService{}
+	cmd := usercmd.NewCommand(usercmd.Deps{Service: fake})
 	stdout, stderr, logs, err := testutil.ExecuteCommand(t, cmd,
 		"--key", validKeyFilePath,
 		"--principal", "web",
 	)
 
-	require.NoError(t, err)
-	require.Contains(t, stdout, "[user] ok")
-	require.Empty(t, stderr)
+	assert.NoError(t, err)
+	assert.Empty(t, stdout)
+	assert.Empty(t, stderr)
+	assert.Empty(t, logs)
 
-	testutil.LogContains(t, logs[0], "key", validKeyFilePath)
-	testutil.LogContains(t, logs[0], "principal", "[web]")
-
-	require.Equal(t, "user run", logs[0].Message)
+	assert.Equal(t, true, fake.called)
+	assert.Equal(t, validKeyFilePath, fake.got.Config.User.Key)
+	assert.Equal(t, []string{"web"}, fake.got.Config.User.Principals)
+	assert.Equal(t, "", fake.got.Config.OAuth.ServerURL)
+	assert.Equal(t, "", fake.got.Config.OAuth.ClientID)
+	assert.Equal(t, "", fake.got.Config.OAuth.ClientSecret)
+	assert.Equal(t, "", fake.got.Config.OAuth.TokenURL)
+	assert.Equal(t, uint64(1800), fake.got.Config.User.DurationSeconds)
 }
 
 func TestUsercmd_WithKeySucceeds(t *testing.T) {
 	validKeyFilePath := testutil.ProjectPath(t, "testdata", "id.pub")
 
-	cmd := usercmd.NewCommand()
+	fake := &fakeUserService{}
+	cmd := usercmd.NewCommand(usercmd.Deps{Service: fake})
 	stdout, stderr, logs, err := testutil.ExecuteCommand(t, cmd,
 		"--key", validKeyFilePath,
 		"--principal", "web",
@@ -53,25 +75,34 @@ func TestUsercmd_WithKeySucceeds(t *testing.T) {
 		"--token-url", "http://localhost:3939",
 	)
 
-	require.NoError(t, err)
-	require.Contains(t, stdout, "[user] ok")
-	require.Empty(t, stderr)
-	testutil.LogContains(t, logs[0], "duration", "1800")
-	require.Equal(t, "user run", logs[0].Message)
+	assert.NoError(t, err)
+	assert.Empty(t, stdout)
+	assert.Empty(t, stderr)
+	assert.Empty(t, logs)
+
+	assert.Equal(t, true, fake.called)
+	assert.Equal(t, validKeyFilePath, fake.got.Config.User.Key)
+	assert.Equal(t, []string{"web"}, fake.got.Config.User.Principals)
+	assert.Equal(t, "http://localhost:8888", fake.got.Config.OAuth.ServerURL)
+	assert.Equal(t, "clientId", fake.got.Config.OAuth.ClientID)
+	assert.Equal(t, "secret", fake.got.Config.OAuth.ClientSecret)
+	assert.Equal(t, "http://localhost:3939", fake.got.Config.OAuth.TokenURL)
+	assert.Equal(t, uint64(1800), fake.got.Config.User.DurationSeconds)
 }
 
 func TestUsercmd_BadConfigFails(t *testing.T) {
 	content := []byte("not: [valid\n")
 	cfgPath := testutil.WriteTempFile(t, "config.yml", []byte(content))
 
-	cmd := usercmd.NewCommand()
+	fake := &fakeUserService{}
+	cmd := usercmd.NewCommand(usercmd.Deps{Service: fake})
 	stdout, stderr, logs, err := testutil.ExecuteCommand(t, cmd, "--config", cfgPath)
 
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "failed to read config")
-	require.Contains(t, stdout, "Usage:")
-	require.Contains(t, stderr, "Error:")
-	require.Empty(t, logs)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to read config")
+	assert.Contains(t, stdout, "Usage:")
+	assert.Contains(t, stderr, "Error:")
+	assert.Empty(t, logs)
 }
 
 func TestUsercmd_WithValidConfigSucceeds(t *testing.T) {
@@ -90,29 +121,23 @@ token-url: "https://idp.example.test/token"
 
 	cfgPath := testutil.WriteTempFile(t, "config.yml", []byte(content))
 
-	cmd := usercmd.NewCommand()
+	fake := &fakeUserService{}
+	cmd := usercmd.NewCommand(usercmd.Deps{Service: fake})
 	stdout, stderr, logs, err := testutil.ExecuteCommand(t, cmd, "--config", cfgPath)
 
-	require.NoError(t, err)
-	require.Contains(t, stdout, "[user] ok")
-	require.Empty(t, stderr)
+	assert.NoError(t, err)
+	assert.Empty(t, stdout)
+	assert.Empty(t, stderr)
+	assert.Empty(t, logs)
 
-	testutil.LogContains(t, logs[0], "key", validKeyFilePath)
-	testutil.LogContains(t, logs[0], "principal", "[web]")
-	testutil.LogContains(t, logs[0], "ca-server-url", "https://ca.example.test")
-	testutil.LogContains(t, logs[0], "client-id", "client")
-	testutil.LogContains(t, logs[0], "token-url", "https://idp.example.test/token")
-	testutil.LogContains(t, logs[0], "duration", "1800")
-
-	require.NotContains(t, stdout, "secret")
-	testutil.LogNotContains(t, logs[0], "client-secret")
-
-	for i := range logs {
-		testutil.LogNotContainsValue(t, logs[i], "secret")
-	}
-
-	require.Empty(t, stderr)
-	require.Equal(t, "user run", logs[0].Message)
+	assert.Equal(t, true, fake.called)
+	assert.Equal(t, validKeyFilePath, fake.got.Config.User.Key)
+	assert.Equal(t, []string{"web"}, fake.got.Config.User.Principals)
+	assert.Equal(t, "https://ca.example.test", fake.got.Config.OAuth.ServerURL)
+	assert.Equal(t, "client", fake.got.Config.OAuth.ClientID)
+	assert.Equal(t, "secret", fake.got.Config.OAuth.ClientSecret)
+	assert.Equal(t, "https://idp.example.test/token", fake.got.Config.OAuth.TokenURL)
+	assert.Equal(t, uint64(1800), fake.got.Config.User.DurationSeconds)
 }
 
 func TestUsercmd_Precedence_ConfigEnvFlag(t *testing.T) {
@@ -134,7 +159,8 @@ token_url: "https://idp.from.config/token"
 	t.Setenv("SSH_KEYSIGN_CLIENT_ID", "id_from_env")
 	t.Setenv("SSH_KEYSIGN_CLIENT_SECRET", "secret_from_env")
 
-	cmd := usercmd.NewCommand()
+	fake := &fakeUserService{}
+	cmd := usercmd.NewCommand(usercmd.Deps{Service: fake})
 	stdout, stderr, logs, err := testutil.ExecuteCommand(t, cmd,
 		"--config", cfgPath,
 		"--key", validKeyFilePath,
@@ -143,23 +169,17 @@ token_url: "https://idp.from.config/token"
 		"--token-url", "https://idp.from.flag/token",
 	)
 
-	require.NoError(t, err)
-	require.Contains(t, stdout, "[user] ok")
+	assert.NoError(t, err)
+	assert.Empty(t, stdout)
+	assert.Empty(t, stderr)
+	assert.Empty(t, logs)
 
-	testutil.LogContains(t, logs[0], "key", validKeyFilePath)
-	testutil.LogContains(t, logs[0], "principal", "[flag_principal]")
-	testutil.LogContains(t, logs[0], "ca-server-url", "https://ca.from.flag")
-	testutil.LogContains(t, logs[0], "client-id", "id_from_env")
-	testutil.LogContains(t, logs[0], "token-url", "https://idp.from.flag/token")
-	testutil.LogContains(t, logs[0], "duration", "1800")
-
-	require.NotContains(t, stdout, "secret_from_env")
-	testutil.LogNotContains(t, logs[0], "client-secret")
-
-	for i := range logs {
-		testutil.LogNotContainsValue(t, logs[i], "secret_from_env")
-	}
-
-	require.Empty(t, stderr)
-	require.Equal(t, "user run", logs[0].Message)
+	assert.Equal(t, true, fake.called)
+	assert.Equal(t, validKeyFilePath, fake.got.Config.User.Key)
+	assert.Equal(t, []string{"flag_principal"}, fake.got.Config.User.Principals)
+	assert.Equal(t, "https://ca.from.flag", fake.got.Config.OAuth.ServerURL)
+	assert.Equal(t, "id_from_env", fake.got.Config.OAuth.ClientID)
+	assert.Equal(t, "secret_from_env", fake.got.Config.OAuth.ClientSecret)
+	assert.Equal(t, "https://idp.from.flag/token", fake.got.Config.OAuth.TokenURL)
+	assert.Equal(t, uint64(1800), fake.got.Config.User.DurationSeconds)
 }

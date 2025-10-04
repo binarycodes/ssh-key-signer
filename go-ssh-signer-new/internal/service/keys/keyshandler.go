@@ -9,7 +9,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-type KeyHandler struct{}
+type CAKeyHandler struct{}
 
 func expandPath(p string) (string, error) {
 	path := p
@@ -31,7 +31,7 @@ func expandPath(p string) (string, error) {
 	return os.ExpandEnv(path), nil
 }
 
-func (KeyHandler) ReadPublicKey(ctx context.Context, path string) (keyType, pubKey string, err error) {
+func (CAKeyHandler) ReadPublicKey(ctx context.Context, path string) (keyType, pubKey string, err error) {
 	p, err := expandPath(path)
 	if err != nil {
 		return "", "", err
@@ -54,5 +54,5 @@ func parsePublicKey(pub []byte) (keyType, pubKey string, err error) {
 	return pk.Type(), pubKeyStr, nil
 }
 
-func (KeyHandler) WriteAtomic(path string, data []byte, perm uint32) error { return nil }
-func (KeyHandler) BackupIfExists(path string) error                        { return nil }
+func (CAKeyHandler) WriteAtomic(path string, data []byte, perm uint32) error { return nil }
+func (CAKeyHandler) BackupIfExists(path string) error                        { return nil }

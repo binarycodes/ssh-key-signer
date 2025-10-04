@@ -14,9 +14,14 @@ import (
 	"binarycodes/ssh-keysign/internal/service/cacert"
 	"binarycodes/ssh-keysign/internal/service/hostsvc"
 	"binarycodes/ssh-keysign/internal/service/keys"
+	"binarycodes/ssh-keysign/internal/service/oauth"
 )
 
-func NewCommand() *cobra.Command {
+type Deps struct {
+	Service hostsvc.Service
+}
+
+func NewCommand(d Deps) *cobra.Command {
 	hostCmd := &cobra.Command{
 		Use:   "host",
 		Short: "Sign host SSH key and generate host ssh certificate",
@@ -45,11 +50,12 @@ func NewCommand() *cobra.Command {
 			}
 
 			runner := &service.Runner{
-				KHandler: keys.KeyHandler{},
-				CClient:  cacert.CACertClient{},
-				Config:   cfg,
+				KeyHandler:  keys.CAKeyHandler{},
+				OAuthClient: oauth.CAAuthClient{},
+				CertClient:  cacert.CACertClient{},
+				Config:      cfg,
 			}
-			err := hostsvc.Run(cmd.Context(), runner)
+			err := d.Service.SignHostKey(cmd.Context(), runner)
 			return err
 		},
 	}

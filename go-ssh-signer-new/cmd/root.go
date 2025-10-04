@@ -20,6 +20,8 @@ import (
 	"binarycodes/ssh-keysign/internal/ctxkeys"
 	"binarycodes/ssh-keysign/internal/logging"
 	"binarycodes/ssh-keysign/internal/meta"
+	"binarycodes/ssh-keysign/internal/service/hostsvc"
+	"binarycodes/ssh-keysign/internal/service/usersvc"
 )
 
 var rootCmd = &cobra.Command{
@@ -111,8 +113,8 @@ func Execute() {
 
 func InitRoot() error {
 	rootCmd.AddCommand(versioncmd.NewCommand())
-	rootCmd.AddCommand(hostcmd.NewCommand())
-	rootCmd.AddCommand(usercmd.NewCommand())
+	rootCmd.AddCommand(hostcmd.NewCommand(hostcmd.Deps{Service: hostsvc.HostService{}}))
+	rootCmd.AddCommand(usercmd.NewCommand(usercmd.Deps{Service: usersvc.UserService{}}))
 
 	rootCmd.PersistentFlags().String("log-level", "warn", "info level: error|warn|info|debug")
 	rootCmd.PersistentFlags().String("log-dest", "stderr", "log destination: stderr|stdout|file")

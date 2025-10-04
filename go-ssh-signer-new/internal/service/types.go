@@ -17,8 +17,21 @@ type CertClient interface {
 	IssueHostCert(ctx context.Context, pubKey []byte, principals []string, durationSec uint64) ([]byte, error)
 }
 
+type OAuthClient interface {
+	ClientCredentialLogin(ctx context.Context, oauth config.OAuth) (aToken *AccessToken, err error)
+}
+
 type Runner struct {
-	KHandler KeyHandler
-	CClient  CertClient
-	Config   config.Config
+	KeyHandler  KeyHandler
+	OAuthClient OAuthClient
+	CertClient  CertClient
+	Config      config.Config
+}
+
+type AccessToken struct {
+	AccessToken      string `json:"access_token"`
+	ExpiresIn        int64  `json:"expires_in"`
+	RefreshExpiresIn int64  `json:"refresh_expires_in"`
+	TokenType        string `json:"token_type"`
+	Scope            string `json:"scope"`
 }

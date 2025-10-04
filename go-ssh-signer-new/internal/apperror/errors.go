@@ -3,6 +3,8 @@ package apperror
 import (
 	"context"
 	"errors"
+	"io"
+	"net/http"
 )
 
 type (
@@ -14,9 +16,10 @@ const (
 	KUnknown    Kind = iota
 	KUsage           // bad flags/config
 	KAuth            // 401/403
-	KNetwork         // DNS/TLS/timeout/5xx
+	KNetwork         // DNS/TLS
 	KFileSystem      // read/write perms
 	KCanceled        // context canceled/deadline
+	KHttp            // http errors
 )
 
 type appError struct {
@@ -37,6 +40,8 @@ func (kind Kind) ExitCode() int {
 		return 10
 	case KFileSystem:
 		return 13
+	case KHttp:
+		return 14
 	default:
 		return 1
 	}
@@ -72,6 +77,15 @@ func ErrNet(err error) error {
 
 func ErrFileSystem(err error) error {
 	return &appError{Type: KFileSystem, OpError: err}
+}
+
+func ErrHTTP(resp *http.Response) error {
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return &appError{Type: KHttp, OpError: err}
+	}
+	err = errors.New(string(body))
+	return &appError{Type: KHttp, OpError: err}
 }
 
 func Op(op string, err error) error {

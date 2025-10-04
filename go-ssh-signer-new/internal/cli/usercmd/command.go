@@ -13,10 +13,15 @@ import (
 	"binarycodes/ssh-keysign/internal/service"
 	"binarycodes/ssh-keysign/internal/service/cacert"
 	"binarycodes/ssh-keysign/internal/service/keys"
+	"binarycodes/ssh-keysign/internal/service/oauth"
 	"binarycodes/ssh-keysign/internal/service/usersvc"
 )
 
-func NewCommand() *cobra.Command {
+type Deps struct {
+	Service usersvc.Service
+}
+
+func NewCommand(d Deps) *cobra.Command {
 	userCmd := &cobra.Command{
 		Use:   "user",
 		Short: "Sign user SSH key and generate user ssh certificate",
@@ -45,11 +50,12 @@ func NewCommand() *cobra.Command {
 			}
 
 			runner := &service.Runner{
-				KHandler: keys.KeyHandler{},
-				CClient:  cacert.CACertClient{},
-				Config:   cfg,
+				KeyHandler:  keys.CAKeyHandler{},
+				OAuthClient: oauth.CAAuthClient{},
+				CertClient:  cacert.CACertClient{},
+				Config:      cfg,
 			}
-			err := usersvc.Run(cmd.Context(), runner)
+			err := d.Service.SignUserKey(cmd.Context(), runner)
 			return err
 		},
 	}

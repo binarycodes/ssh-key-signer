@@ -10,7 +10,13 @@ import (
 	"binarycodes/ssh-keysign/internal/service"
 )
 
-func Run(ctx context.Context, r *service.Runner) error {
+type UserService struct{}
+
+type Service interface {
+	SignUserKey(ctx context.Context, r *service.Runner) error
+}
+
+func (UserService) SignUserKey(ctx context.Context, r *service.Runner) error {
 	log := ctxkeys.LoggerFrom(ctx)
 	p := ctxkeys.PrinterFrom(ctx)
 
@@ -26,7 +32,7 @@ func Run(ctx context.Context, r *service.Runner) error {
 
 	p.V(logging.Verbose).Println("fetching key details")
 
-	kType, key, err := r.KHandler.ReadPublicKey(ctx, cfg.User.Key)
+	kType, key, err := r.KeyHandler.ReadPublicKey(ctx, cfg.User.Key)
 	if err != nil {
 		return err
 	}
