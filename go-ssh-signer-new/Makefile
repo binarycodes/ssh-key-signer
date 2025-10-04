@@ -35,7 +35,7 @@ ENVVARS := CGO_ENABLED=0 GOOS=$(GO_OS) GOARCH=$(GO_ARCH)
 
 .PHONY: all build clean run lint fmt tidy test cover getname prep-test tools
 
-all: fmt lint test build
+all: tools fmt lint test build
 
 tidy:
 	go mod tidy
@@ -89,10 +89,3 @@ tools:
 	@command -v go >/dev/null || { echo "❌ go not found in PATH"; exit 1; }
 	@command -v golangci-lint >/dev/null || { echo "❌ golangci-lint not found in PATH"; exit 1; }
 	@command -v ssh-keygen >/dev/null || { echo "❌ ssh-keygen not found in PATH"; exit 1; }
-
-
-# run tools check before everything
-ifneq ($(MAKECMDGOALS),)
-NEEDS_TOOLS := $(filter-out tools,$(MAKECMDGOALS))
-$(NEEDS_TOOLS): tools
-endif
