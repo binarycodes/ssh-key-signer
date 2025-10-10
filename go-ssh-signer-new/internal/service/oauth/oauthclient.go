@@ -56,3 +56,7 @@ func (CAAuthClient) ClientCredentialLogin(ctx context.Context, o config.OAuth) (
 
 	return accessToken, nil
 }
+
+func (CAAuthClient) DeviceFlowLogin(ctx context.Context, o config.OAuth) (aToken *service.AccessToken, err error) {
+	return nil, nil
+}

@@ -16,6 +16,10 @@ type OAuth struct {
 	TokenURL     string `mapstructure:"token-url"`
 }
 
+func (o OAuth) HasClientCredential() bool {
+	return o.ServerURL != "" && o.TokenURL != "" && o.ClientID != "" && o.ClientSecret != ""
+}
+
 type Host struct {
 	Key             string   `mapstructure:"key"`
 	Principals      []string `mapstructure:"principal"`
