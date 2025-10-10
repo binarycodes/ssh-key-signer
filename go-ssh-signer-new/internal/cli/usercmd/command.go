@@ -63,6 +63,8 @@ func NewCommand(d Deps) *cobra.Command {
 	userCmd.Flags().StringP("key", "k", "", "path to public key file")
 	userCmd.Flags().StringSliceP("principal", "p", nil, "comma-separated principal names")
 	userCmd.Flags().Uint64P("duration", "d", constants.DefaultDurationForUserKey(), "duration in seconds")
+	userCmd.Flags().String("device-flow-url", "", "OIDC device flow URL")
+	userCmd.Flags().String("token-poll-url", "", "OIDC token poll URL")
 
 	cli.WireCommonFlags(userCmd)
 

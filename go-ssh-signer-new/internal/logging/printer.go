@@ -15,7 +15,7 @@ const (
 )
 
 type Printer struct {
-	writer io.Writer
+	Writer io.Writer
 	level  Verbosity
 }
 
@@ -27,15 +27,15 @@ func NewPrinter(w io.Writer, level int) *Printer {
 	if level <= int(VeryVerbose) {
 		v = Verbosity(level)
 	}
-	return &Printer{writer: w, level: v}
+	return &Printer{Writer: w, level: v}
 }
 
 func (p *Printer) Printf(format string, args ...any) {
-	fmt.Fprintf(p.writer, format, args...)
+	fmt.Fprintf(p.Writer, format, args...)
 }
 
 func (p *Printer) Println(format string) {
-	fmt.Fprintln(p.writer, format)
+	fmt.Fprintln(p.Writer, format)
 }
 
 func (p *Printer) V(l Verbosity) *conditional {
@@ -49,12 +49,12 @@ type conditional struct {
 
 func (c *conditional) Printf(format string, args ...any) {
 	if c.printer.level >= c.need {
-		fmt.Fprintf(c.printer.writer, format, args...)
+		fmt.Fprintf(c.printer.Writer, format, args...)
 	}
 }
 
 func (c *conditional) Println(format string) {
 	if c.printer.level >= c.need {
-		fmt.Fprintln(c.printer.writer, format)
+		fmt.Fprintln(c.printer.Writer, format)
 	}
 }

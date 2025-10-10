@@ -54,7 +54,7 @@ func (HostService) SignHostKey(ctx context.Context, r *service.Runner) error {
 	p.V(logging.VeryVerbose).Println("received access token")
 	log.Info("auth token received",
 		zap.String("type", accessToken.TokenType),
-		zap.Int64("expires_in", accessToken.ExpiresIn),
+		zap.Uint64("expires_in", accessToken.ExpiresIn),
 	)
 
 	p.V(logging.Verbose).Println("initiating connection to CA server to sign public key")

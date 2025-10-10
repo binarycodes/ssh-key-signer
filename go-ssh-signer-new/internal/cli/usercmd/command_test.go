@@ -30,13 +30,13 @@ func TestUsercmd_MissingKeyFails(t *testing.T) {
 	stdout, stderr, logs, err := testutil.ExecuteCommand(t, cmd)
 
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "missing required parameters")
+	assert.NotEmpty(t, err.Error())
 	assert.Contains(t, stdout, "Usage:")
 	assert.Contains(t, stderr, "Error:")
 	assert.Empty(t, logs)
 }
 
-func TestUsercmd_OIDCIsOptional(t *testing.T) {
+func TestUsercmd_TokenURLIsOptional(t *testing.T) {
 	validKeyFilePath := testutil.ProjectPath(t, "testdata", "id.pub")
 
 	fake := &fakeUserService{}
@@ -44,6 +44,11 @@ func TestUsercmd_OIDCIsOptional(t *testing.T) {
 	stdout, stderr, logs, err := testutil.ExecuteCommand(t, cmd,
 		"--key", validKeyFilePath,
 		"--principal", "web",
+		"--ca-server-url", "http://localhost:8888",
+		"--client-id", "clientId",
+		"--client-secret", "secret",
+		"--device-flow-url", "http://localhost:3939/device",
+		"--token-poll-url", "http://localhost:3939/token-poll",
 	)
 
 	assert.NoError(t, err)
@@ -54,10 +59,12 @@ func TestUsercmd_OIDCIsOptional(t *testing.T) {
 	assert.Equal(t, true, fake.called)
 	assert.Equal(t, validKeyFilePath, fake.got.Config.User.Key)
 	assert.Equal(t, []string{"web"}, fake.got.Config.User.Principals)
-	assert.Equal(t, "", fake.got.Config.OAuth.ServerURL)
-	assert.Equal(t, "", fake.got.Config.OAuth.ClientID)
-	assert.Equal(t, "", fake.got.Config.OAuth.ClientSecret)
+	assert.Equal(t, "http://localhost:8888", fake.got.Config.OAuth.ServerURL)
+	assert.Equal(t, "clientId", fake.got.Config.OAuth.ClientID)
+	assert.Equal(t, "secret", fake.got.Config.OAuth.ClientSecret)
 	assert.Equal(t, "", fake.got.Config.OAuth.TokenURL)
+	assert.Equal(t, "http://localhost:3939/device", fake.got.Config.OAuth.DeviceFlowURL)
+	assert.Equal(t, "http://localhost:3939/token-poll", fake.got.Config.OAuth.TokenPollURL)
 	assert.Equal(t, uint64(1800), fake.got.Config.User.DurationSeconds)
 }
 

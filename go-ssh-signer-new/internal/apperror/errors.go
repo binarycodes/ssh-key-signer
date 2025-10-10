@@ -3,6 +3,7 @@ package apperror
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 )
@@ -84,7 +85,13 @@ func ErrHTTP(resp *http.Response) error {
 	if err != nil {
 		return &appError{Type: KHttp, OpError: err}
 	}
-	err = errors.New(string(body))
+
+	if len(body) > 0 {
+		err = errors.New(string(body))
+		return &appError{Type: KHttp, OpError: err}
+	}
+
+	err = fmt.Errorf("statuscode: %d", resp.StatusCode)
 	return &appError{Type: KHttp, OpError: err}
 }
 

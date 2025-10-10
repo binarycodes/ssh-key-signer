@@ -31,10 +31,14 @@ type Runner struct {
 
 type AccessToken struct {
 	AccessToken      string `json:"access_token"`
-	ExpiresIn        int64  `json:"expires_in"`
-	RefreshExpiresIn int64  `json:"refresh_expires_in"`
+	ExpiresIn        uint64 `json:"expires_in"`
+	RefreshExpiresIn uint64 `json:"refresh_expires_in"`
 	TokenType        string `json:"token_type"`
 	Scope            string `json:"scope"`
+}
+
+func (a AccessToken) OK() bool {
+	return a.AccessToken != "" && a.ExpiresIn > 0 && a.TokenType != "" && a.RefreshExpiresIn > 0 && a.Scope != ""
 }
 
 type SignRequest struct {
@@ -46,4 +50,13 @@ type SignRequest struct {
 type SignedResponse struct {
 	Filename        string `json:"filename"`
 	SignedPublicKey string `json:"signedKey"`
+}
+
+type DeviceFlowStartResponse struct {
+	DeviceCode              string `json:"device_code"`
+	UserCode                string `json:"user_code"`
+	VerificationURI         string `json:"verification_uri"`
+	VerificationURIComplete string `json:"verification_uri_complete"`
+	ExpiresIn               uint64 `json:"expires_in"`
+	Interval                uint64 `json:"interval"`
 }
