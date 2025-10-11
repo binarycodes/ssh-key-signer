@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"binarycodes/ssh-keysign/internal/config"
+	"binarycodes/ssh-keysign/internal/ctxkeys"
+	"binarycodes/ssh-keysign/internal/logging"
 )
 
 type KeyHandler interface {
@@ -37,8 +39,20 @@ type AccessToken struct {
 	Scope            string `json:"scope"`
 }
 
-func (a AccessToken) OK() bool {
-	return a.AccessToken != "" && a.ExpiresIn > 0 && a.TokenType != "" && a.RefreshExpiresIn > 0 && a.Scope != ""
+func (a AccessToken) OK(ctx context.Context) bool {
+	p := ctxkeys.PrinterFrom(ctx)
+
+	if len(a.AccessToken) > 10 {
+		p.V(logging.VeryVerbose).Printf("accessToken: %v\n", a.AccessToken[:10]+"...")
+	} else {
+		p.V(logging.VeryVerbose).Printf("accessToken: %v\n", a.AccessToken)
+	}
+
+	p.V(logging.VeryVerbose).Printf("expiresIn: %v\n", a.ExpiresIn)
+	p.V(logging.VeryVerbose).Printf("tokenType: %v\n", a.TokenType)
+	p.V(logging.VeryVerbose).Printf("scope: %v\n", a.Scope)
+
+	return a.AccessToken != "" && a.ExpiresIn > 0 && a.TokenType != "" && a.Scope != ""
 }
 
 type SignRequest struct {

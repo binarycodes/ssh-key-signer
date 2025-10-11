@@ -63,7 +63,7 @@ func (UserService) SignUserKey(ctx context.Context, r *service.Runner) error {
 		}
 	}
 
-	if accessToken == nil || !accessToken.OK() {
+	if accessToken == nil || !accessToken.OK(ctx) {
 		return apperror.ErrAuth(errors.New("failed to retrieve access token"))
 	}
 
