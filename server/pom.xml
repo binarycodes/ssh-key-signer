@@ -7,7 +7,7 @@
     <groupId>io.binarycodes.homelab</groupId>
     <artifactId>ssh-signer-mono</artifactId>
     <name>SSH KeySigner</name>
-    <version>0.0.4</version>
+    <version>0.0.5</version>
 
     <packaging>pom</packaging>
 
