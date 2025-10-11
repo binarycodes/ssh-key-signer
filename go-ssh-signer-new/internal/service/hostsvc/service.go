@@ -17,6 +17,11 @@ type Service interface {
 	SignHostKey(ctx context.Context, r *service.Runner) error
 }
 
+// TODO: implement:
+// [x] read public key at o.Key
+// [x] request token using o.ClientID/o.Secret against o.TokenURL
+// [x] call o.CAServer to sign host cert with principals + duration
+// [ ] write cert to stdout/file
 func (HostService) SignHostKey(ctx context.Context, r *service.Runner) error {
 	log := ctxkeys.LoggerFrom(ctx)
 	p := ctxkeys.PrinterFrom(ctx)
@@ -59,7 +64,7 @@ func (HostService) SignHostKey(ctx context.Context, r *service.Runner) error {
 
 	p.V(logging.Verbose).Println("initiating connection to CA server to sign public key")
 
-	signedResponse, err := r.CertClient.IssueHostCert(ctx, &service.HostCertConfig{
+	signedResponse, err := r.CertClient.IssueHostCert(ctx, &service.HostCertRequestConfig{
 		HostConfig:  r.Config.Host,
 		OAuthConfig: r.Config.OAuth,
 		PubKey:      key,
@@ -74,12 +79,14 @@ func (HostService) SignHostKey(ctx context.Context, r *service.Runner) error {
 		zap.String("filename", signedResponse.Filename),
 	)
 
-	// TODO: implement:
-	// 1) read public key at o.Key
-	// 2) request token using o.ClientID/o.Secret against o.TokenURL
-	// 3) call o.CAServer to sign host cert with principals + duration
-	// 4) write cert to stdout/file
+	p.V(logging.VeryVerbose).Println("storing the certificate")
+	if err := r.CertHandler.StoreHostCert(ctx, &service.HostCertHandlerConfig{
+		HostConfig:     cfg.Host,
+		SignedResponse: *signedResponse,
+	}); err != nil {
+		return err
+	}
 
-	p.Println("[host] ok")
+	p.V(logging.VeryVerbose).Println("done")
 	return nil
 }

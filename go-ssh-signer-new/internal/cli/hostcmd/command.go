@@ -50,10 +50,11 @@ func NewCommand(d Deps) *cobra.Command {
 			}
 
 			runner := &service.Runner{
+				Config:      cfg,
 				KeyHandler:  keys.CAKeyHandler{},
 				OAuthClient: oauth.CAAuthClient{},
 				CertClient:  cacert.CACertClient{},
-				Config:      cfg,
+				CertHandler: cacert.CACertHandler{},
 			}
 			err := d.Service.SignHostKey(cmd.Context(), runner)
 			return err

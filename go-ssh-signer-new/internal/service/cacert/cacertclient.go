@@ -24,7 +24,7 @@ func (CACertClient) userSignURL(cfg config.OAuth) string {
 	return fmt.Sprintf("%s/rest/key/userSign", cfg.ServerURL)
 }
 
-func (c CACertClient) IssueUserCert(ctx context.Context, u *service.UserCertConfig) (*service.SignedResponse, error) {
+func (c CACertClient) IssueUserCert(ctx context.Context, u *service.UserCertRequestConfig) (*service.SignedResponse, error) {
 	signRequest := service.SignRequest{
 		Filename:  filepath.Base(u.UserConfig.Key),
 		PublicKey: u.PubKey,
@@ -70,7 +70,7 @@ func (c CACertClient) IssueUserCert(ctx context.Context, u *service.UserCertConf
 	return signedResponse, nil
 }
 
-func (c CACertClient) IssueHostCert(ctx context.Context, h *service.HostCertConfig) (*service.SignedResponse, error) {
+func (c CACertClient) IssueHostCert(ctx context.Context, h *service.HostCertRequestConfig) (*service.SignedResponse, error) {
 	signRequest := service.SignRequest{
 		Filename:  filepath.Base(h.HostConfig.Key),
 		PublicKey: h.PubKey,

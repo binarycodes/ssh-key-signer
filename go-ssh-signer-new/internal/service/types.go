@@ -15,8 +15,8 @@ type KeyHandler interface {
 }
 
 type CertClient interface {
-	IssueUserCert(ctx context.Context, u *UserCertConfig) (*SignedResponse, error)
-	IssueHostCert(ctx context.Context, h *HostCertConfig) (*SignedResponse, error)
+	IssueUserCert(ctx context.Context, u *UserCertRequestConfig) (*SignedResponse, error)
+	IssueHostCert(ctx context.Context, h *HostCertRequestConfig) (*SignedResponse, error)
 }
 
 type OAuthClient interface {
@@ -25,21 +25,32 @@ type OAuthClient interface {
 }
 
 type CertHandler interface {
-	WriteCert(ctx context.Context, c config.Config, s SignedResponse) error
+	StoreUserCert(ctx context.Context, u *UserCertHandlerConfig) error
+	StoreHostCert(ctx context.Context, h *HostCertHandlerConfig) error
 }
 
-type UserCertConfig struct {
+type UserCertRequestConfig struct {
 	UserConfig  config.User
 	OAuthConfig config.OAuth
 	PubKey      string
 	Token       AccessToken
 }
 
-type HostCertConfig struct {
+type HostCertRequestConfig struct {
 	HostConfig  config.Host
 	OAuthConfig config.OAuth
 	PubKey      string
 	Token       AccessToken
+}
+
+type UserCertHandlerConfig struct {
+	UserConfig     config.User
+	SignedResponse SignedResponse
+}
+
+type HostCertHandlerConfig struct {
+	HostConfig     config.Host
+	SignedResponse SignedResponse
 }
 
 type Runner struct {
@@ -47,6 +58,7 @@ type Runner struct {
 	KeyHandler  KeyHandler
 	OAuthClient OAuthClient
 	CertClient  CertClient
+	CertHandler CertHandler
 }
 
 type AccessToken struct {
