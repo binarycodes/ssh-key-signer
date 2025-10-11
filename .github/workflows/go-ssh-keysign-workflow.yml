@@ -1,11 +1,11 @@
-name: go-ssh-signer
+name: go-ssh-keysign
 
 on:
   push:
     branches: [ '*' ]
     paths:
-      - go-ssh-signer/**
-      - .github/workflows/go-ssh-signer-workflow.yml
+      - go-ssh-keysign/**
+      - .github/workflows/go-ssh-keysign-workflow.yml
       - .github/workflows/go-build.yml
 
 jobs:
@@ -22,6 +22,5 @@ jobs:
     needs: set-version
     uses: ./.github/workflows/go-build.yml
     with:
-      service: go-ssh-signer
-      artifact: ssh-keysign
+      service: go-ssh-keysign
       artifactVersion: ${{ needs.set-version.outputs.short_sha }}

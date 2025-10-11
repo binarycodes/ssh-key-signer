@@ -43,7 +43,7 @@ jobs:
         run: |
           mvn versions:set -DnewVersion=${{ needs.extract-version.outputs.clean_version }} -DprocessAllModules
           mvn versions:update-properties -DincludeProperties=ssh-signer-common-lib.version
-          mvn versions:commit            
+          mvn versions:commit
 
       - name: commit new version
         id: get-latest-sha
@@ -53,24 +53,24 @@ jobs:
 
           # create a temporary branch from the tag
           git switch -c temp-from-tag
-          
+
           git add .
           git commit -m "Update version to ${{ needs.extract-version.outputs.clean_version }}"
-          
+
           # force move the tag to the new commit
           git tag -f ${{ github.ref_name }}
           git push origin ${{ github.ref_name }} --force
-      
+
           # merge to main
           git fetch origin
           git switch main
           git merge temp-from-tag --no-ff -m "Merge tag ${{ github.ref_name }} changes into main"
-      
+
           git push origin main
-          
+
           # cleanup temp branch
           git branch -d temp-from-tag
-          
+
           NEW_SHA=$(git rev-parse main)
           echo "updated-sha=$NEW_SHA" >> $GITHUB_OUTPUT
 
@@ -89,7 +89,7 @@ jobs:
     needs: [extract-version, prepare-release]
     uses: ./.github/workflows/go-build.yml
     with:
-      service: go-ssh-signer
+      service: go-ssh-keysign
       artifact: ssh-keysign
       artifactVersion: ${{ needs.extract-version.outputs.clean_version }}
       sha: ${{ needs.prepare-release.outputs.updated-sha }}

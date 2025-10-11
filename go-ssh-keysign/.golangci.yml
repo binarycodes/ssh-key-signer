@@ -1,0 +1,77 @@
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+  allow-parallel-runners: true
+
+linters:
+  enable:
+    - govet
+    - staticcheck
+    - errcheck
+    - ineffassign
+    - unused
+    - revive
+    - gocritic
+    - misspell
+    - prealloc
+    - gocyclo
+
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters: [errcheck, gocyclo]
+      - path: (.+/)?(mocks?|mock|generated|gen|vendor)/
+        linters: [revive, gocritic, gocyclo, misspell]
+
+  settings:
+    revive:
+      severity: warning
+      rules:
+        - name: var-naming
+        - name: receiver-naming
+        - name: indent-error-flow
+        - name: error-return
+        - name: error-strings
+        - name: empty-block
+        - name: unreachable-code
+        - name: if-return
+    gocritic:
+      enabled-tags: [diagnostic, style, performance]
+      disabled-checks: [hugeParam, singleCaseSwitch]
+    gocyclo:
+      min-complexity: 15
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+      exclude-functions:
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln
+    prealloc:
+      simple: true
+      range-loops: true
+      for-loops: true
+
+# v2: formatters are separate from linters
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+    - gci
+  settings:
+    gofumpt:
+      module-path: binarycodes/ssh-keysign
+      extra-rules: true
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(binarycodes/ssh-keysign)
+
+output:
+  formats:
+    text:
+      print-linter-name: true
+      print-issued-lines: true

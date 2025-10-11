@@ -1,0 +1,22 @@
+log-level: "error"       # error|warn|info|debug
+log-dest: "stderr"       # stderr|stdout|file
+
+ca-server-url: "http://localhost:8088"
+client-id: "my-test-client"
+client-secret: "UTRtYkyYN1nbgdPPbBru1FDVsE8ye5JE"
+token-url: "http://10.88.0.100:8090/realms/my-test-realm/protocol/openid-connect/token"
+
+user:
+  key: "testdata/id.pub"
+  principal:
+    - alice
+    - devops
+  duration: 3600
+
+host:
+  key: "testdata/id.pub"
+  principal:
+    - ip-10-0-1-23.ec2.internal
+    - web
+  duration: 3600
+

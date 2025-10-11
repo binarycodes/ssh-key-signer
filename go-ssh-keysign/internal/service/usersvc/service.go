@@ -1,0 +1,110 @@
+package usersvc
+
+import (
+	"context"
+	"errors"
+
+	"go.uber.org/zap"
+
+	"binarycodes/ssh-keysign/internal/apperror"
+	"binarycodes/ssh-keysign/internal/ctxkeys"
+	"binarycodes/ssh-keysign/internal/logging"
+	"binarycodes/ssh-keysign/internal/service"
+)
+
+type UserService struct{}
+
+type Service interface {
+	SignUserKey(ctx context.Context, r *service.Runner) error
+}
+
+func (UserService) SignUserKey(ctx context.Context, r *service.Runner) error {
+	log := ctxkeys.LoggerFrom(ctx)
+	p := ctxkeys.PrinterFrom(ctx)
+
+	cfg := r.Config
+	log.Info("user run",
+		zap.String("key", cfg.User.Key),
+		zap.Strings("principal", cfg.User.Principals),
+		zap.Uint64("duration", cfg.User.DurationSeconds),
+		zap.String("ca-server-url", cfg.OAuth.ServerURL),
+		zap.String("client-id", cfg.OAuth.ClientID),
+		zap.String("token-url", cfg.OAuth.TokenURL),
+	)
+
+	p.V(logging.Verbose).Println("fetching key details")
+
+	kType, key, err := r.KeyHandler.ReadPublicKey(ctx, cfg.User.Key)
+	if err != nil {
+		return err
+	}
+
+	p.V(logging.VeryVerbose).Printf("found key type: %v | public key: %v\n", kType, key)
+	log.Info("public key details",
+		zap.String("type", kType),
+		zap.String("key", key),
+	)
+
+	p.V(logging.Verbose).Println("initiating connection to OAuth")
+
+	var accessToken *service.AccessToken
+
+	if cfg.OAuth.HasClientCredential() {
+		p.V(logging.Verbose).Println("using client credential")
+		accessToken, err = r.OAuthClient.ClientCredentialLogin(ctx, cfg.OAuth)
+		if err != nil {
+			return apperror.ErrAuth(err)
+		}
+	} else {
+		p.V(logging.Verbose).Println("using device flow")
+		accessToken, err = r.OAuthClient.DeviceFlowLogin(ctx, cfg.OAuth)
+		if err != nil {
+			return apperror.ErrAuth(err)
+		}
+	}
+
+	if accessToken == nil || !accessToken.OK(ctx) {
+		return apperror.ErrAuth(errors.New("failed to retrieve access token"))
+	}
+
+	p.V(logging.VeryVerbose).Println("received access token")
+	log.Info("auth token received",
+		zap.String("type", accessToken.TokenType),
+		zap.Uint64("expires_in", accessToken.ExpiresIn),
+	)
+
+	p.V(logging.Verbose).Println("initiating connection to CA server to sign public key")
+
+	signedResponse, err := r.CertClient.IssueUserCert(ctx, &service.UserCertRequestConfig{
+		UserConfig:  r.Config.User,
+		OAuthConfig: r.Config.OAuth,
+		PubKey:      key,
+		Token:       *accessToken,
+	})
+	if err != nil {
+		return apperror.ErrNet(err)
+	}
+
+	p.V(logging.VeryVerbose).Println("received signed certificate")
+	log.Info("signed certificate received",
+		zap.String("filename", signedResponse.Filename),
+	)
+
+	p.V(logging.VeryVerbose).Println("storing the certificate")
+
+	path, err := r.CertHandler.StoreUserCert(ctx, &service.UserCertHandlerConfig{
+		UserConfig:     cfg.User,
+		SignedResponse: *signedResponse,
+	})
+	if err != nil {
+		return err
+	}
+
+	p.V(logging.Normal).Printf("certificate stored at %s", path)
+	log.Info("certificate stored",
+		zap.String("filename", path),
+	)
+
+	p.V(logging.VeryVerbose).Println("done")
+	return nil
+}

@@ -6,9 +6,6 @@ on:
       service:
         required: true
         type: string
-      artifact:
-        required: true
-        type: string
       artifactVersion:
         required: true
         type: string
@@ -16,22 +13,84 @@ on:
         required: false
         type: string
         default: ${{ github.sha }}
-        
+
 jobs:
-  build:
+
+  lint:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        go-version:
-          - '1.19' #default for debian bookworm
-          - '1.22'
-          - '1.23'
-          - '1.24'
-          - '1.25' #latest for arch
+
     defaults:
       run:
         working-directory: ./${{ inputs.service }}
-         
+
+    steps:
+      - name: checkout sources
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.sha }}
+
+      - name: setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: ${{ inputs.service }}/go.mod
+          cache: true
+          cache-dependency-path: |
+            ${{ inputs.service }}/go.sum
+            ${{ inputs.service }}/go.mod
+
+      - name: install golangci-lint
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.5.0
+          golangci-lint version
+
+      - name: run lint
+        run: make lint
+
+  test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./${{ inputs.service }}
+
+    steps:
+      - name: checkout sources
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.sha }}
+
+      - name: setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: ${{ inputs.service }}/go.mod
+          cache: true
+          cache-dependency-path: |
+            ${{ inputs.service }}/go.sum
+            ${{ inputs.service }}/go.mod
+
+      - name: run tests
+        run: make test
+
+  build:
+    runs-on: ubuntu-latest
+
+    needs:
+      - lint
+      - test
+
+    strategy:
+      matrix:
+        go-version:
+          - '1.24'
+          - '1.25'
+        include:
+          - go-version: '1.25'
+            upload: true
+
+    defaults:
+      run:
+        working-directory: ./${{ inputs.service }}
+
     steps:
       - name: checkout sources
         uses: actions/checkout@v4
@@ -42,13 +101,23 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
+          cache: true
+          cache-dependency-path: |
+            ${{ inputs.service }}/go.sum
+            ${{ inputs.service }}/go.mod
 
       - name: build
-        run: make build version="${{ inputs.artifactVersion }}" goVersion="-${{ matrix.go-version }}"
+        run: make build VERSION="${{ inputs.artifactVersion }}"
+
+      - name: get artifact name
+        if: matrix.upload
+        id: artifact-name
+        run: echo "name=$(make getname VERSION=${{ inputs.artifactVersion }})" >> $GITHUB_OUTPUT
 
       - name: upload build artifact
+        if: matrix.upload
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.artifact }}-${{ matrix.go-version }}
-          path: ${{ inputs.service}}/bin/${{ inputs.artifact }}*
+          name: ${{ steps.artifact-name.outputs.name }}
+          path: ${{ inputs.service}}/bin/${{ steps.artifact-name.outputs.name }}
           retention-days: 5
