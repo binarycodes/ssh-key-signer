@@ -16,22 +16,24 @@ env:
   REGISTRY: docker.io
   IMAGE_NAME: ${{ github.repository }}
   PROJECT: ssh-key-signer-server
+  PROJECT_DIR: ./server
 
 jobs:
   build:
-    if: github.actor != 'dependabot[bot]'
-    runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./server/
-    steps:
-      - name: "display sha"
-        run: |
-          echo "found sha ${{ inputs.sha }}"
+        working-directory: ${{ env.PROJECT_DIR }}
 
+    if: github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.sha }}
+
+      - name: "display sha"
+        run: |
+          echo "found sha ${{ inputs.sha }}"
 
       - name: set up jdk
         uses: actions/setup-java@v4
@@ -76,7 +78,7 @@ jobs:
       - name: build and push
         uses: docker/build-push-action@v6
         with:
-          context: ${{ env.PROJECT }}
+          context: ${{ env.PROJECT_DIR }}/${{ env.PROJECT }}
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
