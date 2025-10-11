@@ -1,10 +1,5 @@
 package io.binarycodes.homelab.sshkeysigner.keymanagement;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.util.Optional;
-
 import com.sshtools.common.publickey.InvalidPassphraseException;
 import com.sshtools.common.publickey.SshCertificateAuthority;
 import com.sshtools.common.publickey.SshKeyPairGenerator;
@@ -19,6 +14,13 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.time.Duration;
+import java.util.List;
+import java.util.Optional;
+
 @Log4j2
 @Service
 public class KeyService {
@@ -26,10 +28,6 @@ public class KeyService {
 
     private static final String CERTIFICATE_FILE_NAME_SUFFIX = "cert";
     private final ApplicationProperties applicationProperties;
-
-    private enum SIGN_TYPE {
-        USER, HOST
-    }
 
     public KeyService(final ApplicationProperties applicationProperties) {
         this.applicationProperties = applicationProperties;
@@ -108,34 +106,65 @@ public class KeyService {
     }
 
     private SshKeyPair keyInfoToKeyPair(final KeyInfo keyInfo, final String passphrase) throws IOException, InvalidPassphraseException {
-        return SshPrivateKeyFileFactory.parse(keyInfo.privateKey()
-                        .getBytes(StandardCharsets.UTF_8))
+        return SshPrivateKeyFileFactory.parse(keyInfo.privateKey().getBytes(StandardCharsets.UTF_8))
                 .toKeyPair(passphrase);
     }
 
     /**
      * Signs the given key for user
      */
-    public Optional<SignedPublicKeyDownload> signUserKey(final String filename, final byte[] bytes, final String principalName) {
-        return signKey(SIGN_TYPE.USER, filename, bytes, principalName);
+    public Optional<SignedPublicKeyDownload> signUserKey(final String filename, final String pubKey, final String keyId, final String principal) {
+        return signUserKey(filename, pubKey, keyId, List.of(principal));
+    }
+
+    /**
+     * Signs the given key for user
+     */
+    public Optional<SignedPublicKeyDownload> signUserKey(final String filename, final String pubKey, final String keyId, final List<String> principals) {
+        final var bytes = pubKey.getBytes(StandardCharsets.UTF_8);
+        return signUserKey(filename, bytes, keyId, principals);
+    }
+
+    /**
+     * Signs the given key for user
+     */
+    public Optional<SignedPublicKeyDownload> signUserKey(final String filename, final byte[] bytes, final String keyId, final List<String> principals) {
+        return signKey(SshCertificateType.USER, filename, bytes, keyId, principals, applicationProperties.caUserValidity());
     }
 
     /**
      * Signs the given key for host
      */
-    public Optional<SignedPublicKeyDownload> signHostKey(final String filename, final byte[] bytes, final String hostName) {
-        return signKey(SIGN_TYPE.HOST, filename, bytes, hostName);
+    public Optional<SignedPublicKeyDownload> signHostKey(final String filename, final String pubKey, final String keyId, final String principal) {
+        return signHostKey(filename, pubKey, keyId, List.of(principal));
     }
 
-    private Optional<SignedPublicKeyDownload> signKey(final SIGN_TYPE signType, final String filename, final byte[] bytes, final String typeData) {
+    /**
+     * Signs the given key for host
+     */
+    public Optional<SignedPublicKeyDownload> signHostKey(final String filename, final String pubKey, final String keyId, final List<String> principals) {
+        final var bytes = pubKey.getBytes(StandardCharsets.UTF_8);
+        return signHostKey(filename, bytes, keyId, principals);
+    }
+
+    /**
+     * Signs the given key for host
+     */
+    public Optional<SignedPublicKeyDownload> signHostKey(final String filename, final byte[] bytes, final String keyId, final List<String> principals) {
+        return signKey(SshCertificateType.HOST, filename, bytes, keyId, principals, applicationProperties.caHostValidity());
+    }
+
+    private Optional<SignedPublicKeyDownload> signKey(final SshCertificateType signType, final String filename, final byte[] bytes, final String keyId, final List<String> principals, final Duration validitySeconds) {
         try {
             final var publicKeyFileToSign = SshPublicKeyFileFactory.parse(bytes);
             final var keyPairToSign = SshKeyPair.getKeyPair(null, publicKeyFileToSign.toPublicKey());
 
-            final var signed = switch (signType) {
-                case USER -> SshCertificateAuthority.generateUserCertificate(keyPairToSign, 0L, typeData, applicationProperties.caUserValidity(), readUserCAKeys());
-                case HOST -> SshCertificateAuthority.generateHostCertificate(keyPairToSign, 0L, typeData, applicationProperties.caHostValidity(), readHostCAKeys());
+            final var signedBy = switch (signType) {
+                case HOST -> readHostCAKeys();
+                case USER -> readUserCAKeys();
             };
+
+            final var signed = SshCertManager.generateCertificate(signType, keyPairToSign, keyId, principals, validitySeconds, applicationProperties.sourceAddresses(), applicationProperties.knownExtensions(), signedBy);
 
             final var signedKey = SshPublicKeyFileFactory.create(signed.getCertificate(), publicKeyFileToSign.getComment(), SshPublicKeyFileFactory.OPENSSH_FORMAT);
             final var signedKeyString = new String(signedKey.getFormattedKey(), StandardCharsets.UTF_8);
@@ -159,4 +188,5 @@ public class KeyService {
         return SshPrivateKeyFileFactory.parse(Path.of(applicationProperties.caHostPath()))
                 .toKeyPair("");
     }
+
 }

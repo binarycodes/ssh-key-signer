@@ -1,7 +1,5 @@
 package io.binarycodes.homelab.sshkeysigner.keymanagement;
 
-import java.nio.charset.StandardCharsets;
-
 import io.binarycodes.homelab.lib.SignPublicKeyRequest;
 import io.binarycodes.homelab.lib.SignedPublicKeyDownload;
 import lombok.extern.log4j.Log4j2;
@@ -36,38 +34,40 @@ public class KeyController {
     public ResponseEntity<SignedPublicKeyDownload> signUserKey(final JwtAuthenticationToken principal, @RequestBody final SignPublicKeyRequest signPublicKeyRequest) {
         final var validationOk = validateAuthentication(principal, signPublicKeyRequest);
         if (!validationOk) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        final var signed = keyService.signUserKey(signPublicKeyRequest.filename(), signPublicKeyRequest.publicKey()
-                .getBytes(StandardCharsets.UTF_8), signPublicKeyRequest.principal());
+        final var signed = keyService.signUserKey(
+                signPublicKeyRequest.filename(),
+                signPublicKeyRequest.publicKey(),
+                principal.getToken().getId(),
+                signPublicKeyRequest.principal()
+        );
 
         return signed.map(signedPublicKeyDownload -> {
-                    return ResponseEntity.ok()
-                            .body(signedPublicKeyDownload);
+                    return ResponseEntity.ok().body(signedPublicKeyDownload);
                 })
-                .orElseGet(() -> ResponseEntity.badRequest()
-                        .build());
+                .orElseGet(() -> ResponseEntity.badRequest().build());
     }
 
     @PostMapping("/hostSign")
     public ResponseEntity<SignedPublicKeyDownload> signHostKey(final JwtAuthenticationToken principal, @RequestBody final SignPublicKeyRequest signPublicKeyRequest) {
         final var validationOk = validateAuthentication(principal, signPublicKeyRequest);
         if (!validationOk) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        final var signed = keyService.signHostKey(signPublicKeyRequest.filename(), signPublicKeyRequest.publicKey()
-                .getBytes(StandardCharsets.UTF_8), signPublicKeyRequest.principal());
+        final var signed = keyService.signHostKey(
+                signPublicKeyRequest.filename(),
+                signPublicKeyRequest.publicKey(),
+                principal.getToken().getId(),
+                signPublicKeyRequest.principal()
+        );
 
         return signed.map(signedPublicKeyDownload -> {
-                    return ResponseEntity.ok()
-                            .body(signedPublicKeyDownload);
+                    return ResponseEntity.ok().body(signedPublicKeyDownload);
                 })
-                .orElseGet(() -> ResponseEntity.badRequest()
-                        .build());
+                .orElseGet(() -> ResponseEntity.badRequest().build());
     }
 
     private boolean validateAuthentication(final JwtAuthenticationToken principal, final SignPublicKeyRequest signPublicKeyRequest) {
@@ -81,8 +81,7 @@ public class KeyController {
             return false;
         }
 
-        if (!principal.getName()
-                .equals(signPublicKeyRequest.principal())) {
+        if (!principal.getName().equals(signPublicKeyRequest.principal())) {
             log.fatal("Invalid principal - \"{}\". Request and authorization do not match. Refusing to sign certificate for \"{}\".",
                     principal.getName(), signPublicKeyRequest.principal());
 

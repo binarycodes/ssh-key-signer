@@ -6,6 +6,8 @@ app:
   ca_host_path: ${CA_HOST_PATH}
   ca_user_validity: ${CA_USER_VALIDITY}
   ca_host_validity: ${CA_HOST_VALIDITY}
+  source_addresses: ${SOURCE_ADDRESSES}
+  known_extensions: ${KNOWN_EXTENSIONS}
 
 spring:
   profiles:

@@ -11,5 +11,7 @@ DB_PASSWORD: app_user_pw
 
 CA_USER_PATH: "/app/ca/user_ca_key"
 CA_HOST_PATH: "/app/ca/host_ca_key"
-CA_USER_VALIDITY: 1
-CA_HOST_VALIDITY: 365
+CA_USER_VALIDITY: 30m
+CA_HOST_VALIDITY: 365d
+SOURCE_ADDRESSES: 10.10.0.0/16
+KNOWN_EXTENSIONS: permit-pty,permit-agent-forwarding
