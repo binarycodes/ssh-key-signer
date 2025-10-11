@@ -6,7 +6,7 @@
 
     <groupId>io.binarycodes.homelab</groupId>
     <artifactId>ssh-signer-common-lib</artifactId>
-    <version>0.0.4</version>
+    <version>0.0.5</version>
 
     <name>Common Library - SSH Key Signer</name>
 
