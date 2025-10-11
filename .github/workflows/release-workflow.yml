@@ -18,18 +18,9 @@ jobs:
 
   prepare-release:
     needs: extract-version
-
-    name: "tagged release"
     runs-on: ubuntu-latest
 
-    outputs:
-      updated-sha: ${{ steps.get-latest-sha.outputs.updated-sha }}
-
     steps:
-      - name: "display tag name"
-        run: |
-            echo "found tag name ${{ needs.extract-version.outputs.clean_version }}"
-
       - name: checkout sources
         uses: actions/checkout@v4
 
@@ -39,50 +30,11 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: "update version to tag"
-        run: |
-          mvn versions:set -DnewVersion=${{ needs.extract-version.outputs.clean_version }} -DprocessAllModules
-          mvn versions:update-properties -DincludeProperties=ssh-signer-common-lib.version
-          mvn versions:commit
-
-      - name: commit new version
-        id: get-latest-sha
-        run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "GitHub Actions"
-
-          # create a temporary branch from the tag
-          git switch -c temp-from-tag
-
-          git add .
-          git commit -m "Update version to ${{ needs.extract-version.outputs.clean_version }}"
-
-          # force move the tag to the new commit
-          git tag -f ${{ github.ref_name }}
-          git push origin ${{ github.ref_name }} --force
-
-          # merge to main
-          git fetch origin
-          git switch main
-          git merge temp-from-tag --no-ff -m "Merge tag ${{ github.ref_name }} changes into main"
-
-          git push origin main
-
-          # cleanup temp branch
-          git branch -d temp-from-tag
-
-          NEW_SHA=$(git rev-parse main)
-          echo "updated-sha=$NEW_SHA" >> $GITHUB_OUTPUT
-
-      - name: debug the SHA
-        run: |
-          echo "The SHA exported is: ${{ steps.get-latest-sha.outputs.updated-sha }}"
-
   docker-build:
     needs: prepare-release
     uses: ./.github/workflows/ssh-key-signer-server-docker.yml
     with:
-      sha: ${{ needs.prepare-release.outputs.updated-sha }}
+      sha: ${{ github.sha }}
     secrets: inherit
 
   go-build:
@@ -91,7 +43,7 @@ jobs:
     with:
       service: go-ssh-keysign
       artifactVersion: ${{ needs.extract-version.outputs.clean_version }}
-      sha: ${{ needs.prepare-release.outputs.updated-sha }}
+      sha: ${{ github.sha }}
 
   create-release:
     needs: [docker-build, go-build]
@@ -102,7 +54,7 @@ jobs:
         id: create_release
         uses: actions/create-release@v1
         with:
-          tag_name: ${{ github.ref }}  # The tag that triggered the release
+          tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
           draft: true
           prerelease: true

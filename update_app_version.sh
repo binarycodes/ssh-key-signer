@@ -37,5 +37,5 @@ fi
 gh pr create \
     --base main \
     --head ${branch_name} \
-    --title "feat: prepare for release of v${version}" \
+    --title "chore: prepare for release of v${version}" \
     --body "This PR is in preparationg for release of version ${version}." \
