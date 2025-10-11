@@ -90,7 +90,6 @@ jobs:
     uses: ./.github/workflows/go-build.yml
     with:
       service: go-ssh-keysign
-      artifact: ssh-keysign
       artifactVersion: ${{ needs.extract-version.outputs.clean_version }}
       sha: ${{ needs.prepare-release.outputs.updated-sha }}
 
