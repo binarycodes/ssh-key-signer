@@ -6,7 +6,7 @@
 
     <groupId>io.binarycodes.homelab</groupId>
     <artifactId>ssh-signer-mono</artifactId>
-    <name>Monorepo - SSH KeySigner</name>
+    <name>SSH KeySigner</name>
     <version>0.0.4</version>
 
     <packaging>pom</packaging>
@@ -14,8 +14,6 @@
     <modules>
         <module>ssh-signer-common-lib</module>
         <module>ssh-key-signer-server</module>
-        <module>ssh-hostkey-signer</module>
-        <module>ssh-userkey-signer</module>
     </modules>
 
 </project>

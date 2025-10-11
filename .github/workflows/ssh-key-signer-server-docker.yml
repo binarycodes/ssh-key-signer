@@ -4,7 +4,7 @@ on:
   push:
     branches: [ '*' ]
     paths:
-      - ssh-key-signer-server/**
+      - server/ssh-key-signer-server/**
       - .github/workflows/ssh-key-signer-server-docker.yml
   workflow_call:
     inputs:
@@ -21,6 +21,9 @@ jobs:
   build:
     if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./server/
     steps:
       - name: "display sha"
         run: |

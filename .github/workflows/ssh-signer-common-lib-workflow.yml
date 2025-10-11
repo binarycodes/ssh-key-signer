@@ -4,7 +4,7 @@ on:
   push:
     branches: [ '*' ]
     paths:
-      - ssh-signer-common-lib/**
+      - server/ssh-signer-common-lib/**
       - .github/workflows/ssh-signer-common-lib-workflow.yml
       - .github/workflows/generic-workflow.yml
 
