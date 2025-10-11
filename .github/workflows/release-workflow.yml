@@ -2,25 +2,23 @@
 name: "tagged-release"
 
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Enter the existing tag name you want to use (e.g., v1.0.0)'
+        required: true
+        type: string
 
 jobs:
-  extract-version:
-    runs-on: ubuntu-latest
-    outputs:
-      clean_version: ${{ steps.strip.outputs.version }}
-    steps:
-      - name: strip leading "v" from tag
-        id: strip
-        run: echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
 
   prepare-release:
     needs: extract-version
 
     name: "tagged release"
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
 
     defaults:
       run:
@@ -30,26 +28,12 @@ jobs:
       updated-sha: ${{ steps.get-latest-sha.outputs.updated-sha }}
 
     steps:
-      - uses: actions/create-github-app-token@v2
-        id: generate-token
-        with:
-          app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
-
       - name: checkout sources
         uses: actions/checkout@v4
-        with:
-          token: ${{ steps.generate-token.outputs.token }}
-
-      - name: get github app user id
-        id: get-user-id
-        run: echo "user-id=$(gh api "/users/${{ steps.generate-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
-        env:
-          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
 
       - name: "display tag name"
         run: |
-            echo "found tag name ${{ needs.extract-version.outputs.clean_version }}"
+            echo "using tag name ${{ inputs.tag_name }}"
 
       - name: set up JDK 21
         uses: actions/setup-java@v4
@@ -59,21 +43,70 @@ jobs:
 
       - name: "update version to tag"
         run: |
-          mvn versions:set -DnewVersion=${{ needs.extract-version.outputs.clean_version }} -DprocessAllModules
+          mvn versions:set -DnewVersion=${{ inputs.tag_name }} -DprocessAllModules
           mvn versions:update-properties -DincludeProperties=ssh-signer-common-lib.version
           mvn versions:commit
+          git add .
 
-      - name: commit new version
+      - name: commit and sign staged changes
+        id: get-latest-sha
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMIT_MESSAGE: "chore(automated): Commit multiple files via API"
+          BRANCH_NAME: ${{ github.ref }} # The full branch ref (e.g., refs/heads/main)
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.repository }}
+        run: |
+          # The API requires a list of files that have been staged/changed
+          CHANGED_FILES=$(git diff --cached --name-only)
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No changes detected. Skipping commit."
+            exit 0
+          fi
+
+          # Get the latest commit SHA (OID)
+          EXPECTED_HEAD_OID=$(git rev-parse HEAD)
+
+          # Build the fileChanges array for the GraphQL mutation
+          FILE_ADDITIONS="[]"
+          for FILE_PATH in $CHANGED_FILES; do
+            # Base64 encode the file contents without line breaks (-w0)
+            CONTENT_BASE64=$(base64 -w0 "$FILE_PATH")
+
+            # Escape JSON characters in the path before inserting into JSON array
+            ESCAPED_PATH=$(echo "$FILE_PATH" | sed 's/"/\\"/g')
+
+            # Append to the additions array
+            FILE_ADDITIONS=$(echo "$FILE_ADDITIONS" | jq --arg path "$ESCAPED_PATH" --arg content "$CONTENT_BASE64" '. += [{path: $path, contents: $content}]')
+          done
+
+          # Call the GraphQL API
+          gh api graphql \
+            -f query=@.github/graphql/createCommit.gql \
+            -f owner="$REPO_OWNER" \
+            -f repoName="$REPO_NAME" \
+            -f branchName="$BRANCH_NAME" \
+            -f expectedHeadOid="$EXPECTED_HEAD_OID" \
+            -f commitMessage="$COMMIT_MESSAGE" \
+            -F fileChanges="{\"additions\": $FILE_ADDITIONS}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Create an annotated tag on the current HEAD
+          git tag -a "${{ inputs.tag_name }}" -m "Release ${{ inputs.tag_name }}"
+
+          # Push the new tag to the remote
+          git push origin "${{ inputs.tag_name }}"
+
+          NEW_SHA=$(git rev-parse main)
+          echo "updated-sha=$NEW_SHA" >> $GITHUB_OUTPUT
+
+      - name: prepare commit of new version
         id: get-latest-sha
         run: |
-          git config --global user.name "${{ steps.generate-token.outputs.app-slug }}[bot]"
-          git config --global user.email "${{ steps.get-user-id.outputs.user-id }}+${{ steps.generate-token.outputs.app-slug }}[bot]@users.noreply.github.com"
-
-          # create a temporary branch from the tag
-          git switch -c temp-from-tag
-
           git add .
-          git commit -m "Update version to ${{ needs.extract-version.outputs.clean_version }}"
+          git commit -m "Update version to ${{ inputs.tag_name }}"
 
           # force move the tag to the new commit
           git tag -f ${{ github.ref_name }}
@@ -89,8 +122,6 @@ jobs:
           # cleanup temp branch
           git branch -d temp-from-tag
 
-          NEW_SHA=$(git rev-parse main)
-          echo "updated-sha=$NEW_SHA" >> $GITHUB_OUTPUT
 
       - name: debug the SHA
         run: |
@@ -108,7 +139,7 @@ jobs:
     uses: ./.github/workflows/go-build.yml
     with:
       service: go-ssh-keysign
-      artifactVersion: ${{ needs.extract-version.outputs.clean_version }}
+      artifactVersion: ${{ inputs.tag_name }}
       sha: ${{ needs.prepare-release.outputs.updated-sha }}
 
   create-release:
