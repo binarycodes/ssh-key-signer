@@ -30,8 +30,22 @@ jobs:
       updated-sha: ${{ steps.get-latest-sha.outputs.updated-sha }}
 
     steps:
+      - uses: actions/create-github-app-token@v2
+        id: generate-token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - name: checkout sources
         uses: actions/checkout@v4
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+
+      - name: get github app user id
+        id: get-user-id
+        run: echo "user-id=$(gh api "/users/${{ steps.generate-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
 
       - name: "display tag name"
         run: |
@@ -40,8 +54,8 @@ jobs:
       - name: set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
+          java-version: "21"
+          distribution: "temurin"
 
       - name: "update version to tag"
         run: |
@@ -52,8 +66,8 @@ jobs:
       - name: commit new version
         id: get-latest-sha
         run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "GitHub Actions"
+          git config --global user.name "${{ steps.generate-token.outputs.app-slug }}[bot]"
+          git config --global user.email "${{ steps.get-user-id.outputs.user-id }}+${{ steps.generate-token.outputs.app-slug }}[bot]@users.noreply.github.com"
 
           # create a temporary branch from the tag
           git switch -c temp-from-tag
