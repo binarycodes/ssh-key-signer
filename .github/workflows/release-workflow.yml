@@ -22,6 +22,10 @@ jobs:
     name: "tagged release"
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: ./server/
+
     outputs:
       updated-sha: ${{ steps.get-latest-sha.outputs.updated-sha }}
 
