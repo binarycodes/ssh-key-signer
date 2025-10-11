@@ -25,8 +25,8 @@ type OAuthClient interface {
 }
 
 type CertHandler interface {
-	StoreUserCert(ctx context.Context, u *UserCertHandlerConfig) error
-	StoreHostCert(ctx context.Context, h *HostCertHandlerConfig) error
+	StoreUserCert(ctx context.Context, u *UserCertHandlerConfig) (path string, err error)
+	StoreHostCert(ctx context.Context, h *HostCertHandlerConfig) (path string, err error)
 }
 
 type UserCertRequestConfig struct {
