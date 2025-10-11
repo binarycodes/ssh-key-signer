@@ -14,16 +14,18 @@ import com.sshtools.common.ssh.components.jce.OpenSshEcdsaSha2Nist521Certificate
 import com.sshtools.common.ssh.components.jce.OpenSshEd25519Certificate;
 import com.sshtools.common.ssh.components.jce.OpenSshRsaCertificate;
 import com.sshtools.common.util.UnsignedInteger64;
+import org.apache.commons.lang3.ObjectUtils;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Collections;
 import java.util.List;
 
 public class SshCertManager {
 
-    public static SshCertificate generateCertificate(final SshCertificateType signType,
+    public static SshCertificate generateCertificate(final SshCertificateType certType,
                                                      final SshKeyPair key,
                                                      final String keyId,
                                                      final List<String> validPrincipals,
@@ -32,19 +34,13 @@ public class SshCertManager {
                                                      final List<String> knownExtensions,
                                                      final SshKeyPair signedBy) throws SshException, IOException, InvalidPassphraseException {
 
-        final var type = switch (signType) {
+        final var type = switch (certType) {
             case HOST -> SshCertificate.SSH_CERT_TYPE_HOST;
             case USER -> SshCertificate.SSH_CERT_TYPE_USER;
         };
 
-        final var criticalOptions = new CriticalOption.Builder()
-                .sourceAddress(sourceAddresses.toArray(String[]::new))
-                .build();
-
-        final var extensionsBuilder = new CertificateExtension.Builder();
-        knownExtensions.forEach(extension -> extensionsBuilder.knownExtension(new NamedCertificateExtension(extension, true)));
-
-        final var extensions = extensionsBuilder.build();
+        final var criticalOptions = buildCriticalOptions(certType, sourceAddresses);
+        final var extensions = buildCertificateExtensions(certType, knownExtensions);
 
         final var now = Instant.now().atZone(ZoneOffset.UTC);
         final UnsignedInteger64 validAfter = new UnsignedInteger64(now.toEpochSecond());
@@ -52,6 +48,28 @@ public class SshCertManager {
 
         return generateCertificate(key, 0L, type, keyId, validPrincipals, validAfter, validBefore, criticalOptions, extensions, signedBy);
     }
+
+
+    private static List<CriticalOption> buildCriticalOptions(SshCertificateType certType, List<String> sourceAddresses) {
+        if (certType == SshCertificateType.HOST || ObjectUtils.isEmpty(sourceAddresses)) {
+            return Collections.emptyList();
+        }
+
+        return new CriticalOption.Builder()
+                .sourceAddress(sourceAddresses.toArray(String[]::new))
+                .build();
+    }
+
+    private static List<CertificateExtension> buildCertificateExtensions(SshCertificateType certType, List<String> knownExtensions) {
+        if (certType == SshCertificateType.HOST || ObjectUtils.isEmpty(knownExtensions)) {
+            return Collections.emptyList();
+        }
+
+        final var extensionsBuilder = new CertificateExtension.Builder();
+        knownExtensions.forEach(extension -> extensionsBuilder.knownExtension(new NamedCertificateExtension(extension, true)));
+        return extensionsBuilder.build();
+    }
+
 
     public static SshCertificate generateCertificate(final SshKeyPair key,
                                                      final long serial,

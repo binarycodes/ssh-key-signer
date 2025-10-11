@@ -154,17 +154,17 @@ public class KeyService {
         return signKey(SshCertificateType.HOST, filename, bytes, keyId, principals, applicationProperties.caHostValidity());
     }
 
-    private Optional<SignedPublicKeyDownload> signKey(final SshCertificateType signType, final String filename, final byte[] bytes, final String keyId, final List<String> principals, final Duration validitySeconds) {
+    private Optional<SignedPublicKeyDownload> signKey(final SshCertificateType certType, final String filename, final byte[] bytes, final String keyId, final List<String> principals, final Duration validitySeconds) {
         try {
             final var publicKeyFileToSign = SshPublicKeyFileFactory.parse(bytes);
             final var keyPairToSign = SshKeyPair.getKeyPair(null, publicKeyFileToSign.toPublicKey());
 
-            final var signedBy = switch (signType) {
+            final var signedBy = switch (certType) {
                 case HOST -> readHostCAKeys();
                 case USER -> readUserCAKeys();
             };
 
-            final var signed = SshCertManager.generateCertificate(signType, keyPairToSign, keyId, principals, validitySeconds, applicationProperties.sourceAddresses(), applicationProperties.knownExtensions(), signedBy);
+            final var signed = SshCertManager.generateCertificate(certType, keyPairToSign, keyId, principals, validitySeconds, applicationProperties.sourceAddresses(), applicationProperties.knownExtensions(), signedBy);
 
             final var signedKey = SshPublicKeyFileFactory.create(signed.getCertificate(), publicKeyFileToSign.getComment(), SshPublicKeyFileFactory.OPENSSH_FORMAT);
             final var signedKeyString = new String(signedKey.getFormattedKey(), StandardCharsets.UTF_8);
