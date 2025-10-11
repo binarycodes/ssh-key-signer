@@ -75,7 +75,12 @@ func (UserService) SignUserKey(ctx context.Context, r *service.Runner) error {
 
 	p.V(logging.Verbose).Println("initiating connection to CA server to sign public key")
 
-	signedResponse, err := r.CertClient.IssueUserCert(ctx, r.Config.User, r.Config.OAuth, key, *accessToken)
+	signedResponse, err := r.CertClient.IssueUserCert(ctx, &service.UserCertConfig{
+		UserConfig:  r.Config.User,
+		OAuthConfig: r.Config.OAuth,
+		PubKey:      key,
+		Token:       *accessToken,
+	})
 	if err != nil {
 		return apperror.ErrNet(err)
 	}

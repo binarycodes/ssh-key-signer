@@ -15,8 +15,8 @@ type KeyHandler interface {
 }
 
 type CertClient interface {
-	IssueUserCert(ctx context.Context, u config.User, o config.OAuth, pubKey string, token AccessToken) (*SignedResponse, error)
-	IssueHostCert(ctx context.Context, h config.Host, o config.OAuth, pubKey string, token AccessToken) (*SignedResponse, error)
+	IssueUserCert(ctx context.Context, u *UserCertConfig) (*SignedResponse, error)
+	IssueHostCert(ctx context.Context, h *HostCertConfig) (*SignedResponse, error)
 }
 
 type OAuthClient interface {
@@ -24,11 +24,29 @@ type OAuthClient interface {
 	DeviceFlowLogin(ctx context.Context, oauth config.OAuth) (aToken *AccessToken, err error)
 }
 
+type CertHandler interface {
+	WriteCert(ctx context.Context, c config.Config, s SignedResponse) error
+}
+
+type UserCertConfig struct {
+	UserConfig  config.User
+	OAuthConfig config.OAuth
+	PubKey      string
+	Token       AccessToken
+}
+
+type HostCertConfig struct {
+	HostConfig  config.Host
+	OAuthConfig config.OAuth
+	PubKey      string
+	Token       AccessToken
+}
+
 type Runner struct {
+	Config      config.Config
 	KeyHandler  KeyHandler
 	OAuthClient OAuthClient
 	CertClient  CertClient
-	Config      config.Config
 }
 
 type AccessToken struct {

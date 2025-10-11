@@ -24,11 +24,11 @@ func (CACertClient) userSignURL(cfg config.OAuth) string {
 	return fmt.Sprintf("%s/rest/key/userSign", cfg.ServerURL)
 }
 
-func (c CACertClient) IssueUserCert(ctx context.Context, u config.User, o config.OAuth, pubKey string, token service.AccessToken) (*service.SignedResponse, error) {
+func (c CACertClient) IssueUserCert(ctx context.Context, u *service.UserCertConfig) (*service.SignedResponse, error) {
 	signRequest := service.SignRequest{
-		Filename:  filepath.Base(u.Key),
-		PublicKey: pubKey,
-		Hostname:  u.Principals[0],
+		Filename:  filepath.Base(u.UserConfig.Key),
+		PublicKey: u.PubKey,
+		Hostname:  u.UserConfig.Principals[0],
 	}
 
 	postBody := new(bytes.Buffer)
@@ -36,13 +36,13 @@ func (c CACertClient) IssueUserCert(ctx context.Context, u config.User, o config
 		return nil, apperror.ErrNet(err)
 	}
 
-	req, err := http.NewRequest("POST", c.userSignURL(o), postBody)
+	req, err := http.NewRequest("POST", c.userSignURL(u.OAuthConfig), postBody)
 	if err != nil {
 		return nil, apperror.ErrNet(err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %v", token.AccessToken))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %v", u.Token.AccessToken))
 
 	client := &http.Client{}
 
@@ -70,11 +70,11 @@ func (c CACertClient) IssueUserCert(ctx context.Context, u config.User, o config
 	return signedResponse, nil
 }
 
-func (c CACertClient) IssueHostCert(ctx context.Context, h config.Host, o config.OAuth, pubKey string, token service.AccessToken) (*service.SignedResponse, error) {
+func (c CACertClient) IssueHostCert(ctx context.Context, h *service.HostCertConfig) (*service.SignedResponse, error) {
 	signRequest := service.SignRequest{
-		Filename:  filepath.Base(h.Key),
-		PublicKey: pubKey,
-		Hostname:  h.Principals[0],
+		Filename:  filepath.Base(h.HostConfig.Key),
+		PublicKey: h.PubKey,
+		Hostname:  h.HostConfig.Principals[0],
 	}
 
 	postBody := new(bytes.Buffer)
@@ -82,13 +82,13 @@ func (c CACertClient) IssueHostCert(ctx context.Context, h config.Host, o config
 		return nil, apperror.ErrNet(err)
 	}
 
-	req, err := http.NewRequest("POST", c.hostSignURL(o), postBody)
+	req, err := http.NewRequest("POST", c.hostSignURL(h.OAuthConfig), postBody)
 	if err != nil {
 		return nil, apperror.ErrNet(err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token.AccessToken))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", h.Token.AccessToken))
 
 	client := &http.Client{}
 

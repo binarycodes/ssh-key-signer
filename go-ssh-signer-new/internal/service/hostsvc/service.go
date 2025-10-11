@@ -59,7 +59,12 @@ func (HostService) SignHostKey(ctx context.Context, r *service.Runner) error {
 
 	p.V(logging.Verbose).Println("initiating connection to CA server to sign public key")
 
-	signedResponse, err := r.CertClient.IssueHostCert(ctx, r.Config.Host, r.Config.OAuth, key, *accessToken)
+	signedResponse, err := r.CertClient.IssueHostCert(ctx, &service.HostCertConfig{
+		HostConfig:  r.Config.Host,
+		OAuthConfig: r.Config.OAuth,
+		PubKey:      key,
+		Token:       *accessToken,
+	})
 	if err != nil {
 		return apperror.ErrNet(err)
 	}
