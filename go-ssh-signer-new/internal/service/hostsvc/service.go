@@ -84,7 +84,7 @@ func (HostService) SignHostKey(ctx context.Context, r *service.Runner) error {
 		return err
 	}
 
-	p.V(logging.Normal).Printf("certificate stored at %s", path)
+	p.V(logging.Normal).Printf("certificate stored at %s\n", path)
 	log.Info("certificate stored",
 		zap.String("filename", path),
 	)
