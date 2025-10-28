@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"crypto/ed25519"
 
 	"binarycodes/ssh-keysign/internal/config"
 	"binarycodes/ssh-keysign/internal/ctxkeys"
@@ -10,8 +11,7 @@ import (
 
 type KeyHandler interface {
 	ReadPublicKey(ctx context.Context, path string) (keyType, pubKey string, err error)
-	WriteAtomic(path string, data []byte, perm uint32) error
-	BackupIfExists(path string) error
+	NewEd25519() (*ED25519KeyPair, error)
 }
 
 type CertClient interface {
@@ -103,4 +103,11 @@ type DeviceFlowStartResponse struct {
 	VerificationURIComplete string `json:"verification_uri_complete"`
 	ExpiresIn               uint64 `json:"expires_in"`
 	Interval                uint64 `json:"interval"`
+}
+
+type ED25519KeyPair struct {
+	PrivateKey      ed25519.PrivateKey
+	PublicKey       ed25519.PublicKey
+	PublicKeyString string
+	Type            string
 }
