@@ -7,26 +7,12 @@ import (
 	"go.uber.org/zap"
 
 	"binarycodes/ssh-keysign/internal/apperror"
-	"binarycodes/ssh-keysign/internal/config"
 	"binarycodes/ssh-keysign/internal/ctxkeys"
 	"binarycodes/ssh-keysign/internal/logging"
 	"binarycodes/ssh-keysign/internal/service"
 )
 
 type UserService struct{}
-
-type keys struct {
-	PublicKey string
-	KeyPair   *service.ED25519KeyPair
-}
-
-func (k keys) getPublicKey(u config.User) string {
-	if u.Key != "" {
-		return k.PublicKey
-	}
-
-	return k.KeyPair.PublicKeyString
-}
 
 type Service interface {
 	SignUserKey(ctx context.Context, r *service.Runner) error
@@ -46,7 +32,7 @@ func (u UserService) SignUserKey(ctx context.Context, r *service.Runner) error {
 		zap.String("token-url", cfg.OAuth.TokenURL),
 	)
 
-	key, err := u.fetchKeys(ctx, r)
+	keys, err := u.fetchKeys(ctx, r)
 	if err != nil {
 		return err
 	}
@@ -56,31 +42,20 @@ func (u UserService) SignUserKey(ctx context.Context, r *service.Runner) error {
 		return err
 	}
 
-	signedResponse, err := u.certSignRequest(ctx, r, key, accessToken)
+	signedResponse, err := u.certSignRequest(ctx, r, keys, accessToken)
 	if err != nil {
 		return err
 	}
 
-	p.V(logging.VeryVerbose).Println("storing the certificate")
-
-	path, err := r.CertHandler.StoreUserCert(ctx, &service.UserCertHandlerConfig{
-		UserConfig:     cfg.User,
-		SignedResponse: *signedResponse,
-	})
-	if err != nil {
+	if err := u.storeCertificate(ctx, r, keys, signedResponse); err != nil {
 		return err
 	}
-
-	p.V(logging.Normal).Printf("certificate stored at %s", path)
-	log.Info("certificate stored",
-		zap.String("filename", path),
-	)
 
 	p.V(logging.VeryVerbose).Println("done")
 	return nil
 }
 
-func (UserService) fetchKeys(ctx context.Context, r *service.Runner) (*keys, error) {
+func (UserService) fetchKeys(ctx context.Context, r *service.Runner) (*service.Keys, error) {
 	log := ctxkeys.LoggerFrom(ctx)
 	p := ctxkeys.PrinterFrom(ctx)
 	cfg := r.Config
@@ -99,13 +74,13 @@ func (UserService) fetchKeys(ctx context.Context, r *service.Runner) (*keys, err
 			zap.String("key", key),
 		)
 
-		return &keys{
+		return &service.Keys{
+			Filename:  cfg.User.Key,
 			PublicKey: key,
-			KeyPair:   nil,
 		}, nil
 	}
 
-	keyPair, err := r.KeyHandler.NewEd25519()
+	keyPair, err := r.KeyHandler.NewEd25519(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -116,9 +91,8 @@ func (UserService) fetchKeys(ctx context.Context, r *service.Runner) (*keys, err
 		zap.String("key", keyPair.PublicKeyString),
 	)
 
-	return &keys{
-		PublicKey: "",
-		KeyPair:   keyPair,
+	return &service.Keys{
+		KeyPair: keyPair,
 	}, nil
 }
 
@@ -158,7 +132,7 @@ func (UserService) fetchAccessToken(ctx context.Context, r *service.Runner) (tok
 	return accessToken, nil
 }
 
-func (UserService) certSignRequest(ctx context.Context, r *service.Runner, k *keys, token *service.AccessToken) (certResp *service.SignedResponse, err error) {
+func (UserService) certSignRequest(ctx context.Context, r *service.Runner, k *service.Keys, token *service.AccessToken) (certResp *service.SignedResponse, err error) {
 	log := ctxkeys.LoggerFrom(ctx)
 	p := ctxkeys.PrinterFrom(ctx)
 	cfg := r.Config
@@ -168,7 +142,7 @@ func (UserService) certSignRequest(ctx context.Context, r *service.Runner, k *ke
 	signedResponse, err := r.CertClient.IssueUserCert(ctx, &service.UserCertRequestConfig{
 		UserConfig:  cfg.User,
 		OAuthConfig: cfg.OAuth,
-		PubKey:      k.getPublicKey(cfg.User),
+		PubKey:      k.FetchPublicKey(),
 		Token:       *token,
 	})
 	if err != nil {
@@ -181,4 +155,33 @@ func (UserService) certSignRequest(ctx context.Context, r *service.Runner, k *ke
 	)
 
 	return signedResponse, nil
+}
+
+func (UserService) storeCertificate(ctx context.Context, r *service.Runner, k *service.Keys, s *service.SignedResponse) (err error) {
+	log := ctxkeys.LoggerFrom(ctx)
+	p := ctxkeys.PrinterFrom(ctx)
+
+	p.V(logging.VeryVerbose).Println("storing the certificate")
+
+	certSaveFilePath, err := k.FetchCertFileName()
+	if err != nil {
+		return err
+	}
+
+	path, err := r.CertHandler.StoreUserCert(ctx, &service.UserCertHandlerConfig{
+		Keys:             *k,
+		CertSaveFilePath: certSaveFilePath,
+		SignedResponse:   *s,
+	})
+	if err != nil {
+		return err
+	}
+
+	p.V(logging.Normal).Printf("certificate stored at %s\n", path)
+
+	log.Info("certificate stored",
+		zap.String("filename", path),
+	)
+
+	return nil
 }

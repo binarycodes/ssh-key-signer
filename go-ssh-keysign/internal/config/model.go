@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"binarycodes/ssh-keysign/internal/apperror"
+	"binarycodes/ssh-keysign/internal/service/utilities"
 )
 
 type OAuth struct {
@@ -66,14 +67,11 @@ func (c *Config) ValidateHost() error {
 		return err
 	}
 
-	return ValidateKeyFile(c.Host.Key)
+	return ValidateKeyFile(c.Host.Key, false)
 }
 
 func (c *Config) ValidateUser() error {
 	var missing []string
-	if c.User.Key == "" {
-		missing = append(missing, "--key")
-	}
 
 	if len(c.User.Principals) == 0 {
 		missing = append(missing, "--principal")
@@ -98,7 +96,7 @@ func (c *Config) ValidateUser() error {
 		}
 	}
 
-	return ValidateKeyFile(c.User.Key)
+	return ValidateKeyFile(c.User.Key, true)
 }
 
 func ValidateDeviceFlow(o OAuth) error {
@@ -149,13 +147,22 @@ func ValidateClientCredential(o OAuth, required bool) (bool, error) {
 	return len(missing) == 0, nil
 }
 
-func ValidateKeyFile(keyfilePath string) error {
-	extension := filepath.Ext(keyfilePath)
+func ValidateKeyFile(keyfilePath string, opt bool) error {
+	if opt && keyfilePath == "" {
+		return nil
+	}
+
+	expandedKeyFilePath, err := utilities.NormalizePath(keyfilePath)
+	if err != nil {
+		return apperror.ErrFileSystem(err)
+	}
+
+	extension := filepath.Ext(expandedKeyFilePath)
 	if extension != ".pub" {
 		return apperror.ErrUsage("only public key files are expected here. [Hint: name ending in .pub]")
 	}
 
-	if _, err := os.Stat(keyfilePath); err != nil {
+	if _, err := os.Stat(expandedKeyFilePath); err != nil {
 		return apperror.ErrFileSystem(err)
 	}
 

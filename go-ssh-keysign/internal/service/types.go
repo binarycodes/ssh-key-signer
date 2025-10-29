@@ -2,16 +2,16 @@ package service
 
 import (
 	"context"
-	"crypto/ed25519"
 
 	"binarycodes/ssh-keysign/internal/config"
 	"binarycodes/ssh-keysign/internal/ctxkeys"
 	"binarycodes/ssh-keysign/internal/logging"
+	"binarycodes/ssh-keysign/internal/service/utilities"
 )
 
 type KeyHandler interface {
 	ReadPublicKey(ctx context.Context, path string) (keyType, pubKey string, err error)
-	NewEd25519() (*ED25519KeyPair, error)
+	NewEd25519(ctx context.Context) (*ED25519KeyPair, error)
 }
 
 type CertClient interface {
@@ -44,13 +44,14 @@ type HostCertRequestConfig struct {
 }
 
 type UserCertHandlerConfig struct {
-	UserConfig     config.User
-	SignedResponse SignedResponse
+	Keys             Keys
+	CertSaveFilePath string
+	SignedResponse   SignedResponse
 }
 
 type HostCertHandlerConfig struct {
-	HostConfig     config.Host
-	SignedResponse SignedResponse
+	CertSaveFilePath string
+	SignedResponse   SignedResponse
 }
 
 type Runner struct {
@@ -88,7 +89,7 @@ func (a AccessToken) OK(ctx context.Context) bool {
 type SignRequest struct {
 	Filename  string `json:"filename"`
 	PublicKey string `json:"publicKey"`
-	Hostname  string `json:"principal"`
+	Principal string `json:"principal"`
 }
 
 type SignedResponse struct {
@@ -106,8 +107,29 @@ type DeviceFlowStartResponse struct {
 }
 
 type ED25519KeyPair struct {
-	PrivateKey      ed25519.PrivateKey
-	PublicKey       ed25519.PublicKey
+	PrivateKey      []byte
 	PublicKeyString string
 	Type            string
+}
+
+type Keys struct {
+	Filename  string
+	PublicKey string
+	KeyPair   *ED25519KeyPair
+}
+
+func (k Keys) FetchPublicKey() string {
+	if k.Filename != "" {
+		return k.PublicKey
+	}
+
+	return k.KeyPair.PublicKeyString
+}
+
+func (k Keys) FetchCertFileName() (string, error) {
+	if k.Filename != "" {
+		return utilities.GetCertificateFilePath(k.Filename)
+	}
+
+	return "", nil
 }

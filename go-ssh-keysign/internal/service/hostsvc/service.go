@@ -38,6 +38,11 @@ func (HostService) SignHostKey(ctx context.Context, r *service.Runner) error {
 		return apperror.ErrFileSystem(err)
 	}
 
+	keys := &service.Keys{
+		Filename:  cfg.Host.Key,
+		PublicKey: key,
+	}
+
 	p.V(logging.VeryVerbose).Printf("found key type: %v | public key: %v\n", kType, key)
 	log.Info("public key details",
 		zap.String("type", kType),
@@ -76,9 +81,14 @@ func (HostService) SignHostKey(ctx context.Context, r *service.Runner) error {
 
 	p.V(logging.VeryVerbose).Println("storing the certificate")
 
+	certSaveFilePath, err := keys.FetchCertFileName()
+	if err != nil {
+		return err
+	}
+
 	path, err := r.CertHandler.StoreHostCert(ctx, &service.HostCertHandlerConfig{
-		HostConfig:     cfg.Host,
-		SignedResponse: *signedResponse,
+		CertSaveFilePath: certSaveFilePath,
+		SignedResponse:   *signedResponse,
 	})
 	if err != nil {
 		return err

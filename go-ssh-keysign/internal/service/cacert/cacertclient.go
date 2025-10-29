@@ -28,7 +28,7 @@ func (c CACertClient) IssueUserCert(ctx context.Context, u *service.UserCertRequ
 	signRequest := service.SignRequest{
 		Filename:  filepath.Base(u.UserConfig.Key),
 		PublicKey: u.PubKey,
-		Hostname:  u.UserConfig.Principals[0],
+		Principal: u.UserConfig.Principals[0],
 	}
 
 	postBody := new(bytes.Buffer)
@@ -74,7 +74,7 @@ func (c CACertClient) IssueHostCert(ctx context.Context, h *service.HostCertRequ
 	signRequest := service.SignRequest{
 		Filename:  filepath.Base(h.HostConfig.Key),
 		PublicKey: h.PubKey,
-		Hostname:  h.HostConfig.Principals[0],
+		Principal: h.HostConfig.Principals[0],
 	}
 
 	postBody := new(bytes.Buffer)

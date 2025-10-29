@@ -12,6 +12,7 @@ const (
 	AppName        string = "ssh-keysign"
 	ConfigFileName string = "config.yml"
 	EtcDir         string = "/etc"
+	UserSSHDir     string = "~/.ssh"
 )
 
 func DefaultDurationForHostKey() uint64 {
