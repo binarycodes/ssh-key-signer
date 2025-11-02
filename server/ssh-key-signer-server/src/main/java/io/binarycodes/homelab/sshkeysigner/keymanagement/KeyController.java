@@ -38,7 +38,6 @@ public class KeyController {
         }
 
         final var signed = keyService.signUserKey(
-                signPublicKeyRequest.filename(),
                 signPublicKeyRequest.publicKey(),
                 principal.getToken().getId(),
                 signPublicKeyRequest.principal()
@@ -58,7 +57,6 @@ public class KeyController {
         }
 
         final var signed = keyService.signHostKey(
-                signPublicKeyRequest.filename(),
                 signPublicKeyRequest.publicKey(),
                 principal.getToken().getId(),
                 signPublicKeyRequest.principal()
