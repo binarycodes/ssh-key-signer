@@ -66,7 +66,9 @@ public class SshCertManager {
         }
 
         final var extensionsBuilder = new CertificateExtension.Builder();
-        knownExtensions.forEach(extension -> extensionsBuilder.knownExtension(new NamedCertificateExtension(extension, true)));
+        knownExtensions.stream()
+                .sorted()
+                .forEach(extension -> extensionsBuilder.knownExtension(new NamedCertificateExtension(extension, true)));
         return extensionsBuilder.build();
     }
 
