@@ -87,6 +87,15 @@ func ExecuteCommand(t *testing.T, cmd *cobra.Command, args ...string) (stoutStr,
 		}
 	}()
 
+	tempPath, err := os.MkdirTemp(os.TempDir(), "*")
+	if err != nil {
+		t.Fatalf("error creating temporary config directory: %v", err)
+	}
+
+	if err := os.Setenv("XDG_CONFIG_HOME", tempPath); err != nil {
+		t.Fatalf("setenv: %v", err)
+	}
+
 	err = cmd.Execute()
 	logs = observed.All()
 	return stdout.String(), stderr.String(), logs, err
