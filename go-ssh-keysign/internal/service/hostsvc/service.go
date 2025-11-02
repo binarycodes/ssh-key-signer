@@ -86,7 +86,7 @@ func (HostService) SignHostKey(ctx context.Context, r *service.Runner) error {
 		return err
 	}
 
-	path, err := r.CertHandler.StoreHostCert(ctx, &service.HostCertHandlerConfig{
+	path, err := r.CertHandler.StoreHostCertFile(ctx, &service.HostCertHandlerConfig{
 		CertSaveFilePath: certSaveFilePath,
 		SignedResponse:   *signedResponse,
 	})

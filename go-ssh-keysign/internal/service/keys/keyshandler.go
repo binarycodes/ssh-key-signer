@@ -64,7 +64,8 @@ func (c CAKeyHandler) NewEd25519(ctx context.Context) (*service.ED25519KeyPair, 
 	privateKeyBytes := pem.EncodeToMemory(privBlock)
 
 	return &service.ED25519KeyPair{
-		PrivateKey:      privateKeyBytes,
+		PrivateKey:      &priv,
+		PrivateKeyBytes: privateKeyBytes,
 		PublicKeyString: pubKeyString,
 		Type:            kType,
 	}, err

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"crypto/ed25519"
 
 	"binarycodes/ssh-keysign/internal/config"
 	"binarycodes/ssh-keysign/internal/ctxkeys"
@@ -25,8 +26,9 @@ type OAuthClient interface {
 }
 
 type CertHandler interface {
-	StoreUserCert(ctx context.Context, u *UserCertHandlerConfig) (path string, err error)
-	StoreHostCert(ctx context.Context, h *HostCertHandlerConfig) (path string, err error)
+	StoreUserCertFile(ctx context.Context, u *UserCertHandlerConfig) (agent bool, path string, err error)
+	StoreUserCertAgent(ctx context.Context, u *UserCertHandlerConfig) error
+	StoreHostCertFile(ctx context.Context, h *HostCertHandlerConfig) (path string, err error)
 }
 
 type UserCertRequestConfig struct {
@@ -44,9 +46,8 @@ type HostCertRequestConfig struct {
 }
 
 type UserCertHandlerConfig struct {
-	Keys             Keys
-	CertSaveFilePath string
-	SignedResponse   SignedResponse
+	Keys           Keys
+	SignedResponse SignedResponse
 }
 
 type HostCertHandlerConfig struct {
@@ -107,7 +108,8 @@ type DeviceFlowStartResponse struct {
 }
 
 type ED25519KeyPair struct {
-	PrivateKey      []byte
+	PrivateKey      *ed25519.PrivateKey
+	PrivateKeyBytes []byte
 	PublicKeyString string
 	Type            string
 }

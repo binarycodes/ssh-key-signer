@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -96,6 +97,10 @@ func (c *Config) ValidateUser() error {
 		}
 	}
 
+	if c.User.Key != "" {
+		return ValidateSSHAgent()
+	}
+
 	return ValidateKeyFile(c.User.Key, true)
 }
 
@@ -166,5 +171,13 @@ func ValidateKeyFile(keyfilePath string, opt bool) error {
 		return apperror.ErrFileSystem(err)
 	}
 
+	return nil
+}
+
+func ValidateSSHAgent() error {
+	sock := os.Getenv("SSH_AUTH_SOCK")
+	if sock == "" {
+		return apperror.ErrCert(errors.New("SSH_AUTH_SOCK not set; is ssh-agent running ?"))
+	}
 	return nil
 }

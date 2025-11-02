@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"testing"
@@ -13,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest/observer"
+	"golang.org/x/crypto/ssh/agent"
 
 	"binarycodes/ssh-keysign/internal/ctxkeys"
 	"binarycodes/ssh-keysign/internal/logging"
@@ -39,6 +41,51 @@ func ExecuteCommand(t *testing.T, cmd *cobra.Command, args ...string) (stoutStr,
 	cmd.SetOut(&stdout)
 	cmd.SetErr(&stderr)
 	cmd.SetArgs(args)
+
+	sockPath := t.TempDir() + "/agent.sock"
+	l, err := net.Listen("unix", sockPath)
+	if err != nil {
+		t.Fatalf("listen unix: %v", err)
+	}
+
+	defer func() {
+		if err := l.Close(); err != nil {
+			t.Fatalf("close listener: %v", err)
+		}
+	}()
+
+	// create in-memory agent keyring
+	keyring := agent.NewKeyring()
+
+	// serve connections
+	go func() {
+		for {
+			c, err := l.Accept()
+			if err != nil {
+				if err := l.Close(); err != nil {
+					return
+				}
+				return
+			}
+			go func() {
+				// handles a single connection until EOF.
+				if serveErr := agent.ServeAgent(keyring, c); serveErr != nil {
+					_ = serveErr
+					return
+				}
+			}()
+		}
+	}()
+
+	oldSock := os.Getenv("SSH_AUTH_SOCK")
+	if err := os.Setenv("SSH_AUTH_SOCK", sockPath); err != nil {
+		t.Fatalf("setenv: %v", err)
+	}
+	defer func() {
+		if err := os.Setenv("SSH_AUTH_SOCK", oldSock); err != nil {
+			t.Logf("restore SSH_AUTH_SOCK: %v", err)
+		}
+	}()
 
 	err = cmd.Execute()
 	logs = observed.All()

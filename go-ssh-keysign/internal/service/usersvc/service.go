@@ -163,23 +163,22 @@ func (UserService) storeCertificate(ctx context.Context, r *service.Runner, k *s
 
 	p.V(logging.VeryVerbose).Println("storing the certificate")
 
-	certSaveFilePath, err := k.FetchCertFileName()
-	if err != nil {
-		return err
-	}
-
-	path, err := r.CertHandler.StoreUserCert(ctx, &service.UserCertHandlerConfig{
-		Keys:             *k,
-		CertSaveFilePath: certSaveFilePath,
-		SignedResponse:   *s,
+	agent, path, err := r.CertHandler.StoreUserCertFile(ctx, &service.UserCertHandlerConfig{
+		Keys:           *k,
+		SignedResponse: *s,
 	})
 	if err != nil {
 		return err
 	}
 
-	p.V(logging.Normal).Printf("certificate stored at %s\n", path)
+	if agent {
+		p.V(logging.Normal).Println("certificate stored in ssh-agent")
+	} else {
+		p.V(logging.Normal).Printf("certificate stored at %s\n", path)
+	}
 
 	log.Info("certificate stored",
+		zap.Bool("agent", agent),
 		zap.String("filename", path),
 	)
 
