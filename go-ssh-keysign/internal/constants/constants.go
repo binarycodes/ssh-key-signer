@@ -9,9 +9,11 @@ const (
 	defaultDurationForHostKeyInDays    time.Duration = 365
 	defaultDurationForUserKeyInMinutes time.Duration = 30
 
-	AppName        string = "ssh-keysign"
-	ConfigFileName string = "config.yml"
-	EtcDir         string = "/etc"
+	AppName              string = "ssh-keysign"
+	ConfigFileName       string = "config.yml"
+	EtcDir               string = "/etc"
+	UserSSHDir           string = "~/.ssh"
+	ConfirmCertBeforeUse bool   = false
 )
 
 func DefaultDurationForHostKey() uint64 {

@@ -8,10 +8,9 @@ device-flow-url: "http://10.88.0.100:8090/realms/my-test-realm/protocol/openid-c
 token-poll-url: "http://10.88.0.100:8090/realms/my-test-realm/protocol/openid-connect/token"
 
 user:
-  key: "testdata/id.pub"
+  #key: "testdata/id.pub"
   principal:
-    - alice
-    - devops
+    - binarycodes
   duration: 3600
 
 host:
