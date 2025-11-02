@@ -1,0 +1,12 @@
+cli-app:
+  - "go-ssh-keysign/**"
+
+server:
+  - "server/**"
+
+workflow:
+  - ".github/**"
+
+docs:
+  - "*.md"
+  - "*.org"
