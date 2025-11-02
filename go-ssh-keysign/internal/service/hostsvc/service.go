@@ -75,9 +75,7 @@ func (HostService) SignHostKey(ctx context.Context, r *service.Runner) error {
 	}
 
 	p.V(logging.VeryVerbose).Println("received signed certificate")
-	log.Info("signed certificate received",
-		zap.String("filename", signedResponse.Filename),
-	)
+	log.Info("signed certificate received")
 
 	p.V(logging.VeryVerbose).Println("storing the certificate")
 

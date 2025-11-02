@@ -88,13 +88,11 @@ func (a AccessToken) OK(ctx context.Context) bool {
 }
 
 type SignRequest struct {
-	Filename  string `json:"filename"`
 	PublicKey string `json:"publicKey"`
 	Principal string `json:"principal"`
 }
 
 type SignedResponse struct {
-	Filename        string `json:"filename"`
 	SignedPublicKey string `json:"signedKey"`
 }
 

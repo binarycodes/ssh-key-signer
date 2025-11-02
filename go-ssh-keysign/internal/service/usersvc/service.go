@@ -150,9 +150,7 @@ func (UserService) certSignRequest(ctx context.Context, r *service.Runner, k *se
 	}
 
 	p.V(logging.VeryVerbose).Println("received signed certificate")
-	log.Info("signed certificate received",
-		zap.String("filename", signedResponse.Filename),
-	)
+	log.Info("signed certificate received")
 
 	return signedResponse, nil
 }
