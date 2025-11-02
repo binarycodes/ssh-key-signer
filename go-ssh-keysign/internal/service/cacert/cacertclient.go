@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"path/filepath"
 
 	"binarycodes/ssh-keysign/internal/apperror"
 	"binarycodes/ssh-keysign/internal/config"
@@ -26,9 +25,8 @@ func (CACertClient) userSignURL(cfg config.OAuth) string {
 
 func (c CACertClient) IssueUserCert(ctx context.Context, u *service.UserCertRequestConfig) (*service.SignedResponse, error) {
 	signRequest := service.SignRequest{
-		Filename:  filepath.Base(u.UserConfig.Key),
 		PublicKey: u.PubKey,
-		Hostname:  u.UserConfig.Principals[0],
+		Principal: u.UserConfig.Principals[0],
 	}
 
 	postBody := new(bytes.Buffer)
@@ -72,9 +70,8 @@ func (c CACertClient) IssueUserCert(ctx context.Context, u *service.UserCertRequ
 
 func (c CACertClient) IssueHostCert(ctx context.Context, h *service.HostCertRequestConfig) (*service.SignedResponse, error) {
 	signRequest := service.SignRequest{
-		Filename:  filepath.Base(h.HostConfig.Key),
 		PublicKey: h.PubKey,
-		Hostname:  h.HostConfig.Principals[0],
+		Principal: h.HostConfig.Principals[0],
 	}
 
 	postBody := new(bytes.Buffer)

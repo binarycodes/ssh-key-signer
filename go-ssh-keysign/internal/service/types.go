@@ -2,16 +2,17 @@ package service
 
 import (
 	"context"
+	"crypto/ed25519"
 
 	"binarycodes/ssh-keysign/internal/config"
 	"binarycodes/ssh-keysign/internal/ctxkeys"
 	"binarycodes/ssh-keysign/internal/logging"
+	"binarycodes/ssh-keysign/internal/service/utilities"
 )
 
 type KeyHandler interface {
 	ReadPublicKey(ctx context.Context, path string) (keyType, pubKey string, err error)
-	WriteAtomic(path string, data []byte, perm uint32) error
-	BackupIfExists(path string) error
+	NewEd25519(ctx context.Context) (*ED25519KeyPair, error)
 }
 
 type CertClient interface {
@@ -25,8 +26,9 @@ type OAuthClient interface {
 }
 
 type CertHandler interface {
-	StoreUserCert(ctx context.Context, u *UserCertHandlerConfig) (path string, err error)
-	StoreHostCert(ctx context.Context, h *HostCertHandlerConfig) (path string, err error)
+	StoreUserCertFile(ctx context.Context, u *UserCertHandlerConfig) (agent bool, path string, err error)
+	StoreUserCertAgent(ctx context.Context, u *UserCertHandlerConfig) error
+	StoreHostCertFile(ctx context.Context, h *HostCertHandlerConfig) (path string, err error)
 }
 
 type UserCertRequestConfig struct {
@@ -44,13 +46,13 @@ type HostCertRequestConfig struct {
 }
 
 type UserCertHandlerConfig struct {
-	UserConfig     config.User
+	Keys           Keys
 	SignedResponse SignedResponse
 }
 
 type HostCertHandlerConfig struct {
-	HostConfig     config.Host
-	SignedResponse SignedResponse
+	CertSaveFilePath string
+	SignedResponse   SignedResponse
 }
 
 type Runner struct {
@@ -86,13 +88,11 @@ func (a AccessToken) OK(ctx context.Context) bool {
 }
 
 type SignRequest struct {
-	Filename  string `json:"filename"`
 	PublicKey string `json:"publicKey"`
-	Hostname  string `json:"principal"`
+	Principal string `json:"principal"`
 }
 
 type SignedResponse struct {
-	Filename        string `json:"filename"`
 	SignedPublicKey string `json:"signedKey"`
 }
 
@@ -103,4 +103,33 @@ type DeviceFlowStartResponse struct {
 	VerificationURIComplete string `json:"verification_uri_complete"`
 	ExpiresIn               uint64 `json:"expires_in"`
 	Interval                uint64 `json:"interval"`
+}
+
+type ED25519KeyPair struct {
+	PrivateKey      *ed25519.PrivateKey
+	PrivateKeyBytes []byte
+	PublicKeyString string
+	Type            string
+}
+
+type Keys struct {
+	Filename  string
+	PublicKey string
+	KeyPair   *ED25519KeyPair
+}
+
+func (k Keys) FetchPublicKey() string {
+	if k.Filename != "" {
+		return k.PublicKey
+	}
+
+	return k.KeyPair.PublicKeyString
+}
+
+func (k Keys) FetchCertFileName() (string, error) {
+	if k.Filename != "" {
+		return utilities.GetCertificateFilePath(k.Filename)
+	}
+
+	return "", nil
 }

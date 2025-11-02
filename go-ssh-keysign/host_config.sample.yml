@@ -16,7 +16,6 @@ user:
 host:
   key: "testdata/id.pub"
   principal:
-    - ip-10-0-1-23.ec2.internal
-    - web
+    - my-test-client
   duration: 3600
 

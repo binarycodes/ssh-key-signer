@@ -21,6 +21,7 @@ const (
 	KFileSystem      // read/write perms
 	KCanceled        // context canceled/deadline
 	KHttp            // http errors
+	KCert            // cert/keys error
 )
 
 type appError struct {
@@ -43,6 +44,8 @@ func (kind Kind) ExitCode() int {
 		return 13
 	case KHttp:
 		return 14
+	case KCert:
+		return 15
 	default:
 		return 1
 	}
@@ -78,6 +81,10 @@ func ErrNet(err error) error {
 
 func ErrFileSystem(err error) error {
 	return &appError{Type: KFileSystem, OpError: err}
+}
+
+func ErrCert(err error) error {
+	return &appError{Type: KCert, OpError: err}
 }
 
 func ErrHTTP(resp *http.Response) error {
