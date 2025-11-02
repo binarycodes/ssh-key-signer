@@ -74,7 +74,7 @@ func ReadConfigFile(cmd *cobra.Command, v *viper.Viper) error {
 	} else {
 		switch cmd.Name() {
 		case "user":
-			if runtimeDir := os.Getenv("XDG_RUNTIME_DIR"); runtimeDir != "" {
+			if runtimeDir := os.Getenv("XDG_CONFIG_HOME"); runtimeDir != "" {
 				v.SetConfigFile(filepath.Join(runtimeDir, constants.AppName, constants.ConfigFileName))
 			} else if home, err := os.UserHomeDir(); err == nil && home != "" {
 				v.SetConfigFile(filepath.Join(home, ".config", constants.AppName, constants.ConfigFileName))
