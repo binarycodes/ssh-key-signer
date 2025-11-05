@@ -64,6 +64,14 @@ jobs:
       - name: download build artifacts
         uses: actions/download-artifact@v4
         with:
+          pattern: 'ssh-keysign*'
+          path: ./dist
+          merge-multiple: true
+
+      - name: download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: 'nfpm-packages*'
           path: ./dist
           merge-multiple: true
 
