@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: read
 
     steps:
       - name: extract tag name from branch
@@ -40,13 +41,19 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pr = context.payload.pull_request;
             const tag = process.env.TAG_NAME;
+            const targetSha = pr.merge_commit_sha;
+
             console.log(`Creating tag ${tag}`);
 
             await github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
+              owner: owner,
+              repo: repo,
               ref: `refs/tags/${tag}`,
-              sha: context.sha
+              sha: targetSha
             });
+
             console.log(`Successfully created tag ${tag}`);
