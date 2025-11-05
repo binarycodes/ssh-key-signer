@@ -121,3 +121,40 @@ jobs:
           name: ${{ steps.artifact-name.outputs.name }}
           path: ${{ inputs.service}}/bin/${{ steps.artifact-name.outputs.name }}
           retention-days: 5
+
+  create-linux-packages:
+    needs:
+      - build
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: install nfpm
+        run: |
+          echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list
+          sudo apt update
+          sudo apt install -y nfpm
+
+      - name: checkout sources
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.sha }}
+
+      - name: download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.artifact-name.outputs.name }}
+          path: ${{ inputs.service }}/bin
+          merge-multiple: true
+
+      - name: package with nfpm
+        run: |
+          mkdir -p dist
+          nfpm pkg --packager archlinux --config nfpm.yaml --target dist/
+          nfpm pkg --packager deb --config nfpm.yaml --target dist/
+
+      - name: upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          path: dist/*
+          retention-days: 5
