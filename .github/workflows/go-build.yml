@@ -135,6 +135,11 @@ jobs:
           sudo apt update
           sudo apt install nfpm
 
+      - name: checkout sources
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.sha }}
+
       - name: package with nfpm
         run: |
           mkdir -p dist
