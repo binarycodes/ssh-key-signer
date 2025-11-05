@@ -71,12 +71,33 @@ jobs:
       - name: run tests
         run: make test
 
+  publish-artifact-name:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./${{ inputs.service }}
+
+    outputs:
+      artifact_name: ${{ steps.artifact-name.outputs.name }}
+
+    steps:
+      - name: checkout sources
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.sha }}
+
+      - name: get artifact name
+        id: artifact-name
+        run: echo "name=$(make getname VERSION=${{ inputs.artifactVersion }})" >> $GITHUB_OUTPUT
+
   build:
     runs-on: ubuntu-latest
 
     needs:
       - lint
       - test
+      - publish-artifact-name
 
     strategy:
       matrix:
@@ -109,22 +130,18 @@ jobs:
       - name: build
         run: make build VERSION="${{ inputs.artifactVersion }}"
 
-      - name: get artifact name
-        if: matrix.upload
-        id: artifact-name
-        run: echo "name=$(make getname VERSION=${{ inputs.artifactVersion }})" >> $GITHUB_OUTPUT
-
       - name: upload build artifact
         if: matrix.upload
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.artifact-name.outputs.name }}
+          name: ${{ needs.publish-artifact-name.outputs.artifact_name }}
           path: ${{ inputs.service}}/bin/${{ steps.artifact-name.outputs.name }}
           retention-days: 5
 
   create-linux-packages:
     needs:
       - build
+      - publish-artifact-name
 
     runs-on: ubuntu-latest
 
@@ -143,7 +160,7 @@ jobs:
       - name: download build artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ steps.artifact-name.outputs.name }}
+          name: ${{ needs.publish-artifact-name.outputs.artifact_name }}
           path: ${{ inputs.service }}/bin
           merge-multiple: true
 
