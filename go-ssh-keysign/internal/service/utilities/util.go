@@ -14,7 +14,8 @@ func NormalizePath(p string) (string, error) {
 
 	home, err := os.UserHomeDir()
 	if err != nil {
-		return "", err
+		// if $HOME is not available then fallback to /tmp
+		home = "/tmp"
 	}
 
 	if trimmed, found := strings.CutPrefix(p, "~"); found {
