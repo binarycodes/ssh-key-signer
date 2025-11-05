@@ -65,14 +65,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: ./dist
-          pattern: ssh-keysign*
-
-      - name: move downloaded artifacts up
-        run: |
-          mkdir -p flat-dist
-          find dist/ -type f -exec mv {} flat-dist/ \;
+          merge-multiple: true
 
       - name: upload artifacts to Release
         uses: softprops/action-gh-release@v2
         with:
-          files: ./flat-dist/*
+          files: ./dist/*

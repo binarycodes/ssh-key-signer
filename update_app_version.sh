@@ -9,7 +9,7 @@ if [ -n "$(git status --porcelain -uall)" ]; then
   $EXIT_IF_DIRTY && exit 1
 fi
 
-cd ./server
+pushd ./server
 
 current_version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 
@@ -23,6 +23,11 @@ mvn versions:update-properties -DincludeProperties=ssh-signer-common-lib.version
 mvn versions:commit
 
 git add .
+
+popd
+sed -i "s/tagname=\"v[0-9]\+\.[0-9]\+\.[0-9]\+\"/tagname=\"v$version\"/g" retry-tag-workflow.sh
+git add retry-tag-workflow.sh
+
 git commit -S -m "update version to $version"
 git push --set-upstream origin ${branch_name}
 

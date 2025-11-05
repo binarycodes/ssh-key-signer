@@ -1,0 +1,11 @@
+name: ssh-keysign
+arch: amd64
+platform: linux
+version: 0.0.7
+section: default
+priority: extra
+maintainer: Sujoy Das <me@binarycodes.io>
+description: Generate short lived, oauth verified, SSH certficates on the fly
+contents:
+  - src: ./go-ssh-keysign/bin/ssh-keysign-linux-amd64
+    dst: /usr/local/bin/ssh-keysign
