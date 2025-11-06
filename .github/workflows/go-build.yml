@@ -169,6 +169,8 @@ jobs:
           mkdir -p dist
           nfpm pkg --packager archlinux --config nfpm.yaml --target dist/
           nfpm pkg --packager deb --config nfpm.yaml --target dist/
+          # sign the package for arch linux
+          gpg --batch --yes --detach-sign dist/*.pkg.tar.zst
 
       - name: upload build artifact
         uses: actions/upload-artifact@v4
