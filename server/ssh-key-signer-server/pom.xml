@@ -13,7 +13,7 @@
 
     <properties>
         <java.version>21</java.version>
-        <vaadin.version>24.9.2</vaadin.version>
+        <vaadin.version>24.9.5</vaadin.version>
         <ssh-signer-common-lib.version>0.0.7</ssh-signer-common-lib.version>
     </properties>
 
