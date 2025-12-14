@@ -5,3 +5,6 @@
 **/node_modules/
 **/*ca_key*
 src/**
+
+# ignore test nfpm packages
+dist/**
