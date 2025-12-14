@@ -2,6 +2,11 @@ name: generic-go-versionbuild
 
 on:
   workflow_call:
+    secrets:
+      GPG_PRIVATE_KEY:
+        required: true
+      GPG_PASSPHRASE:
+        required: true
     inputs:
       service:
         required: true
@@ -165,12 +170,23 @@ jobs:
           merge-multiple: true
 
       - name: package with nfpm
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          GPG_KEY_ID: mail@binarycodes.io
         run: |
           mkdir -p dist
           nfpm pkg --packager archlinux --config nfpm.yaml --target dist/
           nfpm pkg --packager deb --config nfpm.yaml --target dist/
+
           # sign the package for arch linux
-          gpg --batch --yes --detach-sign dist/*.pkg.tar.zst
+          test -n "$GPG_PRIVATE_KEY" || { echo "GPG_PRIVATE_KEY is empty"; exit 1; }
+          printf '%s' "$GPG_PRIVATE_KEY" | gpg --batch --import
+          gpg --batch --list-secret-keys --keyid-format LONG
+
+          FPR="$(gpg --batch --list-secret-keys --with-colons | awk -F: '$1=="fpr"{print $10; exit}')"
+
+          gpg --batch --yes --local-user "$FPR" --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" --detach-sign dist/*.pkg.tar.zst
 
       - name: upload build artifact
         uses: actions/upload-artifact@v4
