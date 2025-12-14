@@ -44,6 +44,9 @@ jobs:
       service: go-ssh-keysign
       artifactVersion: ${{ needs.extract-version.outputs.clean_version }}
       sha: ${{ github.sha }}
+    secrets:
+      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+      GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
   create-release:
     needs: [docker-build, go-build]
