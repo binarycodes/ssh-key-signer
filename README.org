@@ -1,0 +1,49 @@
+* Package Signing & Verification (Arch Linux)
+
+This package is signed using a detached OpenPGP signature.
+To install it with =pacman=, you must import and locally trust the signing key *once*.
+
+** Signing Key
+
+- UID: =binarycodes <mail@binarycodes.io>=
+- Fingerprint:
+  =B929081F184DE398E1487552FF8D24F0A3FC59A6=
+
+** Import the Signing Key
+
+Import the public key from a keyserver into pacman's keyring:
+
+#+begin_src sh
+sudo pacman-key --recv-keys B929081F184DE398E1487552FF8D24F0A3FC59A6
+#+end_src
+
+If the default keyserver is unavailable, you can specify one explicitly:
+
+#+begin_src sh
+sudo pacman-key --keyserver keyserver.ubuntu.com \
+  --recv-keys B929081F184DE398E1487552FF8D24F0A3FC59A6
+#+end_src
+
+** Locally Trust the Key (Required)
+
+Pacman requires the key to be *locally trusted* before it will accept signed packages:
+
+#+begin_src sh
+sudo pacman-key --lsign-key B929081F184DE398E1487552FF8D24F0A3FC59A6
+#+end_src
+
+** Install the Package
+
+Once the key is imported and trusted, install the package:
+
+#+begin_src sh
+sudo pacman -U https://github.com/binarycodes/ssh-key-signer/releases/download/v0.0.8/ssh-keysign-0.0.8-1-x86_64.pkg.tar.zst
+#+end_src
+
+Pacman will automatically fetch and verify the accompanying =.sig= file.
+
+** Notes
+
+For background information, see:
+- https://wiki.archlinux.org/title/Package_signing
+- https://man.archlinux.org/man/pacman-key.8
