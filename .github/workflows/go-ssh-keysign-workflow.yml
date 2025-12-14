@@ -24,3 +24,6 @@ jobs:
     with:
       service: go-ssh-keysign
       artifactVersion: ${{ needs.set-version.outputs.short_sha }}
+    secrets:
+      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+      GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}

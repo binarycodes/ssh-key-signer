@@ -1,11 +1,25 @@
 name: ssh-keysign
 arch: amd64
 platform: linux
-version: 0.0.7
+version: 0.0.8
 section: default
 priority: extra
 maintainer: Sujoy Das <me@binarycodes.io>
 description: Generate short lived, oauth verified, SSH certficates on the fly
+license: GPL v3.0
+homepage: https://github.com/binarycodes/ssh-key-signer
+
+archlinux:
+  packager: Sujoy Das <me@binarycodes.io>
+  pkgbase: ssh-keysign
+
 contents:
   - src: ./go-ssh-keysign/bin/ssh-keysign-linux-amd64
-    dst: /usr/local/bin/ssh-keysign
+    dst: /usr/bin/ssh-keysign
+    file_info:
+      mode: 0755
+      owner: root
+      group: root
+
+  - src: ./LICENSE
+    dst: /usr/share/licenses/ssh-keysign/LICENSE
