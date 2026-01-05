@@ -7,7 +7,7 @@ import (
 	"binarycodes/ssh-keysign/internal/config"
 	"binarycodes/ssh-keysign/internal/ctxkeys"
 	"binarycodes/ssh-keysign/internal/logging"
-	"binarycodes/ssh-keysign/internal/service/utilities"
+	"binarycodes/ssh-keysign/internal/service/paths"
 )
 
 type KeyHandler interface {
@@ -128,7 +128,7 @@ func (k Keys) FetchPublicKey() string {
 
 func (k Keys) FetchCertFileName() (string, error) {
 	if k.Filename != "" {
-		return utilities.GetCertificateFilePath(k.Filename)
+		return paths.GetCertificateFilePath(k.Filename)
 	}
 
 	return "", nil

@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"binarycodes/ssh-keysign/internal/apperror"
-	"binarycodes/ssh-keysign/internal/service/utilities"
+	"binarycodes/ssh-keysign/internal/service/paths"
 )
 
 type OAuth struct {
@@ -157,7 +157,7 @@ func ValidateKeyFile(keyfilePath string, opt bool) error {
 		return nil
 	}
 
-	expandedKeyFilePath, err := utilities.NormalizePath(keyfilePath)
+	expandedKeyFilePath, err := paths.NormalizePath(keyfilePath)
 	if err != nil {
 		return apperror.ErrFileSystem(err)
 	}
