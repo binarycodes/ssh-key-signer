@@ -28,6 +28,9 @@ popd
 sed -i "s/tagname=\"v[0-9]\+\.[0-9]\+\.[0-9]\+\"/tagname=\"v$version\"/g" retry-tag-workflow.sh
 git add retry-tag-workflow.sh
 
+sed -i "s/version: [0-9]\+\.[0-9]\+\.[0-9]\+/version: $version/g" nfpm.yaml
+git add nfpm.yaml
+
 git commit -S -m "update version to $version"
 git push --set-upstream origin ${branch_name}
 

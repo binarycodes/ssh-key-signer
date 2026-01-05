@@ -110,7 +110,7 @@ func (CACertHandler) StoreUserCertAgent(ctx context.Context, u *service.UserCert
 	now := uint64(time.Now().Unix())
 	if cert.ValidBefore != ssh.CertTimeInfinity && cert.ValidBefore > now {
 		certDuration := uint64(time.Duration(cert.ValidBefore-now) * time.Second)
-		lifetime = min(lifetime, certDuration)
+		lifetime = certDuration
 	}
 
 	add := agent.AddedKey{

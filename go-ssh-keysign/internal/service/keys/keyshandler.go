@@ -11,13 +11,13 @@ import (
 	"golang.org/x/crypto/ssh"
 
 	"binarycodes/ssh-keysign/internal/service"
-	"binarycodes/ssh-keysign/internal/service/utilities"
+	"binarycodes/ssh-keysign/internal/service/paths"
 )
 
 type CAKeyHandler struct{}
 
 func (c CAKeyHandler) ReadPublicKey(ctx context.Context, path string) (keyType, pubKey string, err error) {
-	p, err := utilities.NormalizePath(path)
+	p, err := paths.NormalizePath(path)
 	if err != nil {
 		return "", "", err
 	}
