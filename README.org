@@ -37,7 +37,7 @@ sudo pacman-key --lsign-key B929081F184DE398E1487552FF8D24F0A3FC59A6
 Once the key is imported and trusted, install the package:
 
 #+begin_src sh
-sudo pacman -U https://github.com/binarycodes/ssh-key-signer/releases/download/v0.0.8/ssh-keysign-0.0.8-1-x86_64.pkg.tar.zst
+sudo pacman -U https://github.com/binarycodes/ssh-key-signer/releases/download/v0.0.10/ssh-keysign-0.0.10-1-x86_64.pkg.tar.zst
 #+end_src
 
 Pacman will automatically fetch and verify the accompanying =.sig= file.
