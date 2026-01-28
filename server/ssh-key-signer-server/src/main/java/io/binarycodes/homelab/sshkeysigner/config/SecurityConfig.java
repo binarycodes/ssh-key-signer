@@ -1,7 +1,8 @@
 package io.binarycodes.homelab.sshkeysigner.config;
 
-import java.util.Collection;
-
+import com.vaadin.flow.spring.security.VaadinAwareSecurityContextHolderStrategyConfiguration;
+import com.vaadin.flow.spring.security.VaadinSecurityConfigurer;
+import com.vaadin.hilla.route.RouteUtil;
 import org.jspecify.annotations.NonNull;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,9 +19,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
-import com.vaadin.flow.spring.security.VaadinAwareSecurityContextHolderStrategyConfiguration;
-import com.vaadin.flow.spring.security.VaadinSecurityConfigurer;
-import com.vaadin.hilla.route.RouteUtil;
+import java.util.Collection;
 
 @Configuration
 @EnableWebSecurity
@@ -37,8 +36,8 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(final HttpSecurity http) throws Exception {
         return http.authorizeHttpRequests(registry -> {
-                    registry.requestMatchers(routeUtil::isRouteAllowed)
-                            .authenticated();
+                    registry.requestMatchers("/actuator/health/**").permitAll();
+                    registry.requestMatchers(routeUtil::isRouteAllowed).authenticated();
                 })
                 .oauth2Login(Customizer.withDefaults())
                 .oauth2ResourceServer(resourceServerConfigurer -> resourceServerConfigurer.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
