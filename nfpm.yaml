@@ -1,7 +1,7 @@
 name: ssh-keysign
 arch: amd64
 platform: linux
-version: 0.0.9
+version: 0.0.10
 section: default
 priority: extra
 maintainer: Sujoy Das <me@binarycodes.io>
