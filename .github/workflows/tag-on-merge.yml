@@ -31,6 +31,9 @@ jobs:
             echo "version_tag=" >> "$GITHUB_OUTPUT"
           fi
 
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Create and Push Tag
         if: steps.tag_extraction.outputs.version_tag != ''
@@ -38,22 +41,10 @@ jobs:
         env:
           TAG_NAME: ${{ steps.tag_extraction.outputs.version_tag }}
 
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-            const pr = context.payload.pull_request;
-            const tag = process.env.TAG_NAME;
-            const targetSha = pr.merge_commit_sha;
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-            console.log(`Creating tag ${tag}`);
-
-            await github.rest.git.createRef({
-              owner: owner,
-              repo: repo,
-              ref: `refs/tags/${tag}`,
-              sha: targetSha
-            });
-
-            console.log(`Successfully created tag ${tag}`);
+          git tag -a "$TAG_NAME" -m "release version $TAG_NAME"
+          git push origin "$TAG_NAME"
