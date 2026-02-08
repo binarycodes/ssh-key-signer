@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-tagname="v0.0.9"
+tagname="v0.0.10"
 
 git tag -d "$tagname"
 git push --delete origin "$tagname"
